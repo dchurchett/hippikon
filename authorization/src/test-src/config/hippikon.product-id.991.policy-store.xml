@@ -1,0 +1,383 @@
+<?xml version="1.0"?>
+<!--
+ - Part of the Hippikon API, a powerful authoriation
+ - security framework for Java applications.
+ -
+ - Copyright (C) 2005  Dale Churchett
+ -
+ - This library is free software; you can redistribute it and/or
+ - modify it under the terms of the GNU Lesser General Public
+ - License as published by the Free Software Foundation; either
+ - version 2.1 of the License, or (at your option) any later version.
+
+ - This library is distributed in the hope that it will be useful,
+ - but WITHOUT ANY WARRANTY; without even the implied warranty of
+ - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ - Lesser General Public License for more details.
+
+ - You should have received a copy of the GNU Lesser General Public
+ - License along with this library; if not, write to the Free Software
+ - Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ -
+ - Contact: Dale Churchett <dale@hippikon.com>
+ - Website: http://www.hippikon.com, http://www.hippikon.org
+ -
+-->
+<policy-store application-name="Hippikon Example Application">
+
+    <!--
+     - We don't have to explicitly turn off permissions for all roles and user types
+     - using wildcards since no entry = no permissions
+    -->
+
+    <!--
+     - We may need to AND on user-type AND a role for safety in case someone's 
+     - roles are reassigned either don't change user roles through admin tool, 
+     - or build fancy admin tool that automatically knows
+     - what objects to re-assign
+    -->
+
+    <!--
+     - The protected-resource 'name' field must match the return value of ProtectedResource.getName()
+    -->
+
+    <protected-resource name="PurchaseOrder">
+
+        <principal type="role" name="manager" acl="-r---"/>
+        <principal type="role" name="teamleader" acl="ir---"/>
+        <principal type="user" name="the-teamleader" acl="-rwc-"/>
+
+        <!--
+         - PurchaseOrderLineItems may be added or deleted
+        -->
+        <protected-resource name="PurchaseOrderLineItem">
+            <principal type="role" name="teamleader" acl="-r---"/>
+            <principal type="user" name="the-teamleader" acl="irw-d"/>
+        </protected-resource>
+
+        <protected-resource name="Attachment">
+            <principal type="role" name="teamleader" acl="-r---"/>
+            <principal type="user" name="the-teamleader" acl="irwcd"/>
+        </protected-resource>
+
+        <protected-resource name="Note">
+            <principal type="role" name="teamleader" acl="-r---"/>
+            <principal type="user" name="the-teamleader" acl="ir---"/>
+        </protected-resource>
+
+        <protected-resource name="PurchaseOrderAnalysis">
+            <principal type="role" name="teamleader" acl="-r---"/>
+            <principal type="user" name="the-teamleader" acl="-r---"/>
+        </protected-resource>
+
+        <protected-resource name="ActionItem">
+            <principal type="role" name="teamleader" acl="-r---"/>
+            <principal type="role" name="manager" acl="irw--"/>
+            <principal type="user" name="the-teamleader" acl="irwc-"/>
+            <principal type="user" name="the-creator" acl="-rwc-"/>
+        </protected-resource>
+
+    </protected-resource>
+
+
+
+    <protected-resource name="Prospect">
+
+        <principal type="role" name="manager" acl="-rw--"/>
+        <principal type="role" name="sales executive" acl="i----"/>
+        <principal type="user" name="the-sales-executive" acl="-rwc-"/>
+
+         <!--
+         - don't let any sales executive access the resource
+         - we need the override in order to turn off create
+         -->
+        <protected-resource name="PurchaseOrder">
+            <principal type="role" name="sales executive" acl="----"/>
+
+            <protected-resource name="PurchaseOrderLineItem">
+                <principal type="user" name="the-sales-executive" acl="irw-d"/>
+            </protected-resource>
+
+            <protected-resource name="Attachment">
+                <principal type="role" name="manager" acl="irwcd"/>
+                <principal type="user" name="the-sales-executive" acl="irwcd"/>
+            </protected-resource>
+
+            <protected-resource name="Note">
+                <principal type="role" name="manager" acl="ir---"/>
+                <principal type="user" name="the-sales-executive" acl="ir---"/>
+            </protected-resource>
+
+            <protected-resource name="ActionItem">
+                <principal type="role" name="manager" acl="irw--"/>
+                <principal type="user" name="the-sales-executive" acl="irwc-"/>
+                <principal type="user" name="the-creator" acl="-rwc-"/>
+            </protected-resource>
+
+            <protected-resource name="PurchaseOrderAnalysis">
+                <principal type="role" name="manager" acl="-r---"/>
+                <principal type="user" name="the-sales-executive" acl="-r---"/>
+            </protected-resource>
+
+        </protected-resource>
+
+        <protected-resource name="SalesSupportInfo">
+            <principal type="role" name="manager" acl="irw--"/>
+            <principal type="role" name="sales executive" acl="-----"/>
+            <principal type="user" name="the-sales-executive" acl="irw--"/>
+        </protected-resource>
+
+    </protected-resource>
+
+
+    <!-- a major container for nested objects that gives a good
+      - example of the use of permission inheritance, override and
+      - object state - see the ProjectPolicy for details
+     -->
+    <protected-resource name="Project">
+
+        <principal type="role" name="manager" acl="-r---"/>
+        <principal type="role" name="sales executive" acl="-r---"/>
+        <principal type="role" name="teamleader" acl="-r---"/>
+        <principal type="role" name="participant" acl="-r---"/>
+        <principal type="role" name="buyer" acl="-r---"/>
+        <principal type="user" name="the-sales-executive" acl="-r---"/>
+        <principal type="user" name="the-teamleader" acl="-rwc-"/>
+        <principal type="user" name="group-member" acl="-r---"/>
+
+
+        <protected-resource name="TaskList">
+            <protected-resource name="TaskListItem">
+                <principal type="user" name="the-task-manager" acl="-rwc-"/>
+            </protected-resource>
+        </protected-resource>
+
+        <protected-resource name="SequenceOfEvents">
+            <!--
+             - used to start/stop/edit the sequence
+            -->
+            <principal type="user" name="the-teamleader" acl="irwc-"/>
+
+            <protected-resource name="ToDoItem">
+
+                <principal type="user" name="assigned-user" acl="-r-c-"/>
+
+                <protected-resource name="Note">
+                    <principal type="role" name="manager" acl="ir---"/>
+                    <principal type="user" name="assigned-user" acl="ir---"/>
+                    <principal type="user" name="the-teamleader" acl="ir---"/>
+                    <principal type="user" name="group-member" acl="ir---"/>
+                </protected-resource>
+
+            </protected-resource>
+        </protected-resource>
+
+        <protected-resource name="Attachment">
+            <principal type="user" name="the-teamleader" acl="irwcd"/>
+            <principal type="user" name="group-member" acl="irwc-"/>
+        </protected-resource>
+
+        <protected-resource name="Note">
+            <principal type="user" name="the-teamleader" acl="ir---"/>
+            <principal type="user" name="group-member" acl="ir---"/>
+        </protected-resource>
+
+        <!--
+         - ExcelForm security must override all other permissions
+         - so we must ensure to explicitly turn off permissions for
+         - any role or user type already defined in the parent
+         - hierachy
+         - here is an example of how we really want to limit access and 
+         - delegate all the permissions logic to a policy callback
+        -->
+        <protected-resource name="ExcelForm">
+                <principal type="role" name="manager" acl="-----"/>
+                <principal type="role" name="sales executive" acl="-----"/>
+                <principal type="role" name="teamleader" acl="-----"/>
+                <principal type="role" name="participant" acl="-----"/>
+                <principal type="role" name="buyer" acl="-----"/>
+
+                <principal type="user" name="the-sales-executive" acl="-----"/>
+                <principal type="user" name="the-teamleader" acl="-----"/>
+                <principal type="user" name="group-member" acl="-----"/>
+
+            <protected-resource name="Attachment">
+            </protected-resource>
+        </protected-resource>
+
+
+        <!--
+          - allows ToDoItems to be handled in the context of a Project
+        -->
+        <protected-resource name="ToDoItem">
+
+            <principal type="user" name="the-teamleader" acl="-rwc-"/>
+            <principal type="user" name="assigned-user" acl="-r-c-"/>
+
+            <protected-resource name="Note">
+                <principal type="role" name="manager" acl="ir---"/>
+                <principal type="user" name="assigned-user" acl="ir---"/>
+                <principal type="user" name="the-teamleader" acl="ir---"/>
+                <principal type="user" name="group-member" acl="ir---"/>
+            </protected-resource>
+
+        </protected-resource>
+
+
+        <!--
+         - The PurchaseOrder has already been created, so no CREATE
+         - permissions is required
+        -->
+        <protected-resource name="PurchaseOrder">
+
+            <protected-resource name="PurchaseOrderLineItem">
+                <principal type="user" name="the-teamleader" acl="irw-d"/>
+            </protected-resource>
+
+            <protected-resource name="Attachment">
+                <principal type="user" name="the-teamleader" acl="irwcd"/>
+            </protected-resource>
+
+            <protected-resource name="Note">
+                <principal type="user" name="the-teamleader" acl="ir---"/>
+            </protected-resource>
+
+            <protected-resource name="ActionItem">
+                <principal type="role" name="manager" acl="irw--"/>
+                <principal type="user" name="the-sales-executive" acl="irw--"/>
+                <principal type="user" name="group-member" acl="irw--"/>
+                <principal type="user" name="the-teamleader" acl="irwc-"/>
+                <principal type="user" name="the-creator" acl="-rwc-"/>
+            </protected-resource>
+
+            <protected-resource name="PurchaseOrderAnalysis">
+                <principal type="role" name="sales executive" acl="-----"/>
+                <principal type="role" name="teamleader" acl="-----"/>
+                <principal type="role" name="participant" acl="-----"/>
+                <principal type="role" name="buyer" acl="-----"/>
+                <principal type="user" name="group-member" acl="-----"/>
+                <principal type="user" name="the-teamleader" acl="-r---"/>
+            </protected-resource>
+
+        </protected-resource>
+
+
+        <!--
+         - The Invoice has already been created, so no CREATE
+         - permission is required
+        -->
+        <protected-resource name="Invoice">
+
+            <protected-resource name="Attachment">
+                <principal type="user" name="the-teamleader" acl="irwcd"/>
+            </protected-resource>
+
+                <protected-resource name="Note">
+                    <principal type="user" name="the-teamleader" acl="ir---"/>
+                </protected-resource>
+
+            <protected-resource name="InvoiceLineItem">
+                <principal type="user" name="the-teamleader" acl="irw-d"/>
+            </protected-resource>
+
+        </protected-resource>
+
+
+        <protected-resource name="ProductChange">
+
+            <principal type="user" name="the-teamleader" acl="irwc-"/>
+            <principal type="user" name="the-sales-executive" acl="irwc-"/>
+
+            <protected-resource name="ECLineItem">
+                <principal type="user" name="the-teamleader" acl="irw-d"/>
+            </protected-resource>
+
+            <protected-resource name="Attachment">
+                <principal type="user" name="group-member" acl="irwcd"/>
+                <principal type="user" name="the-teamleader" acl="irwcd"/>
+                <principal type="user" name="the-sales-executive" acl="irwcd"/>
+            </protected-resource>
+
+            <protected-resource name="Note">
+                <principal type="user" name="the-teamleader" acl="ir---"/>
+                <principal type="user" name="the-sales-executive" acl="ir---"/>
+                <principal type="user" name="group-member" acl="ir---"/>
+            </protected-resource>
+
+        </protected-resource>
+
+    <!-- end of Project -->
+    </protected-resource>
+
+
+    <!--
+     - this is a separate product (not an add-in)
+    -->
+    <protected-resource name="AdministrationConsole">
+
+        <principal type="role" name="administrator" acl="-r---"/>
+
+            <protected-resource name="Contact">
+                <principal type="role" name="administrator" acl="irwc-"/>
+            </protected-resource>
+
+        <protected-resource name="DocumentFolder">
+            <protected-resource name="Attachment">
+                <principal type="role" name="administrator" acl="irwcd"/>
+            </protected-resource>
+        </protected-resource>
+
+    </protected-resource>
+
+    <!--
+     - one document folder per account
+    -->
+    <protected-resource name="DocumentFolder">
+
+        <principal type="role" name="teamleader" acl="-r---"/>
+        <principal type="role" name="participant" acl="-r---"/>
+        <principal type="role" name="manager" acl="-r---"/>
+        <principal type="role" name="sales executive" acl="-r---"/>
+        <principal type="role" name="buyer" acl="-r---"/>
+
+        <protected-resource name="Attachment">
+        </protected-resource>
+
+    </protected-resource>
+
+
+    <!--
+     - Administration of buyer partners and contacts
+    -->
+    <protected-resource name="Component" rolename="Buyer">
+        <principal type="role" name="sales executive" acl="irwc-"/>
+        <principal type="role" name="teamleader" acl="irwc-"/>
+        <principal type="role" name="manager" acl="irwc-"/>
+        <principal type="role" name="buyer" acl="-r---"/>
+        <principal type="role" name="participant" acl="-r---"/>
+    </protected-resource>
+
+
+    <!--
+     - There is no interface for reports right now
+     - but this provides the ability to handle many different
+     - types of configurable reports while delegating the 
+     - permissions lookup to a ReportPolicy and the Reports
+     - subsystem (similar to ExcelForms)
+    -->
+    <protected-resource name="Report">
+    </protected-resource>
+
+    <protected-resource name="AttendanceReport">
+        <principal type="role" name="manager" acl="-r---"/>
+        <principal type="role" name="teamleader" acl="-r---"/>
+        <principal type="role" name="sales executive" acl="-r---"/>
+    </protected-resource>
+
+
+    <protected-resource name="ExecutiveSummary">
+        <principal type="role" name="manager" acl="-r---"/>
+    </protected-resource>
+
+
+</policy-store>

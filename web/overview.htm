@@ -1,0 +1,269 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="mainstyle.css" />
+<title>Hippikon Open Source Authorization API</title>
+</head>
+<body>
+
+<h2><span class="title">Hippikon</span><br>
+Open Source Authorization API for Java Applications</h2>
+
+<div class="sidebar">
+<a class="sidebar" href="index.html">Home</a><br>
+<a class="sidebar" href="about.htm">About</a><br>
+<a class="sidebar" href="overview.htm">Overview</a><br>
+<a class="sidebar" href="how-to.htm">Integration</a><br>
+<a class="sidebar" href="download.htm">Download</a><br>
+<a class="sidebar" href="documentation.htm">Manual</a><br>
+<a class="sidebar" href="docs/index.html">Javadocs</a><br>
+<a class="sidebar" href="http://sourceforge.net/tracker/?group_id=139356&atid=743293">Bug Reports</a><br>
+<a class="sidebar" href="http://www.hippikon.com/forum">User Forum</a><br>
+<a class="sidebar" href="http://www.hippikon.com/blog/index.php">Blog</a>
+</div>
+
+<div class="sflogo">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=139356&amp;type=1" 
+                  width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</div>
+
+<div class="main">
+
+<h2>Overview</h2>
+
+Developers interact with Hippikon through 4 core interfaces and 2 configuration files:<p>
+
+<ul>
+<li><code>com.hippikon.security.AuthorizationContext</code>
+<li><code>com.hippikon.security.PermissionSet</code>
+<li><code>com.hippikon.security.ProtectedResource</code>
+<li><code>com.hippikon.security.PermissionsFactory</code><p>
+
+<li><code>hippikon.product-id.[productID].policy-store.xml (file)</code>
+<li><code>hippikon.product-id.[productID].resource.policies (file)</code> 
+</ul>
+
+For full details on each interface, refer to the <a href="docs">Javadocs</a>, however the general 
+use of Hippikon is for an <code>AuthorizationContext</code> to be created once a user entering
+an application has been authenticated, and then use that context object to obtain
+<code>PermissionSet</code> objects via the <code>PermissionsFactory</code> based on one or
+more <code>ProtectedResource</code> subclasses. Once the permission set has been obtained it
+can be used to check for CREATE, READ, WRITE, CONTROL or DELETE flags in order to allow
+the user to perform actions on the object itself.<p>
+
+Hippikon lends itself very well to implementing a UI using the Limited View pattern by using
+PermissionSet objects to layout or disable sections of a user interface, and also by 
+verifying any methods invoked by a user in the business logic layer. Hippikon is agnostic
+of any underlaying technology (except for Java) and may be incorporated in any Java based
+application including Java Swing, Java Server Faces, Struts or basic JSP/Servlets.<p>
+
+<h2>Example: Securing A Web Application</h2>
+
+To explain the basic use of Hippikon, we shall deal with a web based application for a publishing company, implemented 
+using JSPs and Servlets with
+business objects obtained through a persistance mechanism such as Hibernate. It should be emphasised that
+Hippikon does not know or care about any of these frameworks. The web based application shall be referred to
+as 'the system' from this point on.<p>
+
+Before a user is allowed access to the system they must be authenticated. This may be a simple username/password
+combination handled by a servlet that checks the credentials against a backend store. Other authentication
+systems could be used such as a call to an LDAP server, a digital certificate or some other external subsystem such
+as Netegrity SiteMinder.<p>
+
+Once authenticated the user is forwarded to the HTML page they were requesting, or automatically to the main page
+of the system. Since most systems will not require the user to login on each page request, some cache of authentication
+may be used. Typically, all authentication checks should be carried out by a FrontController of the application, or
+some other mechanism that filters all page requests. It is in the FrontController that user data is loaded and
+used to create a valid <code>AuthorizationContext</code> object.<p>
+
+The <code>AuthorizationContext</code> may then be made available to every JSP or Servlet 
+(or Action if using Struts) by adding the object to the HttpRequest object. It should be noted that 
+<code>AuthorizationContext</code> is Serializable, and may be passed through to a backend EJB 
+SessionBean or remote object.<p>
+
+For this example, let's say the user accessing the system is Jo Smith who is assigned to the role of Manager, 
+Editor, Writer and Reviewer. The system does not want to load up all of Jo's data each time she requests a page, so
+the role data is stored in an encrypted cookie (Hippikon provides the <code>com.hippikon.crypto</code> package
+that contains cryptography methods to support cookie encryption). The publishing company website has two 
+applications that could be accessed by Jo, one for daily book management and one for user administration and 
+Human Resource services. The application today is for daily book management and is given a product identifier of "1".<p>
+
+Once authenticated, Jo is forwarded to the main page configured for the role of 'Manager', which is her primary role
+in the system (a system specific rule). The main page is implemented using a JSP file fed by a Java Servlet, which is 
+called prior to the JSP being displayed. The <code>doGet()</code> method of the servlet pulls the 
+<code>AuthorizationContext</code> created by the FrontController off the request and ensures it is valid before proceeding.
+The next task of the servlet is to load up the first ten books in Jo's assigned task list. The Hibernate layer
+loads up Jo's books using her unique identifier (e.g., user GUID) ensuring the boooks are for Jo to see.<p>
+
+The application developer needs to ensure the list of books are presented to Jo with a pagination mechanism (i.e, next 10, 
+previous 10) and also needs to ensure Jo and only Jo is viewing the list. A ViewHelper object is created to contain
+the list of books, plus some other objects used to create Jo's main page. The ViewHelper object needs to be protected
+and is a subclass of <code>com.hippikon.security.ProtectedResource</code>. The developer implements the required
+<code>getResourceName()</code> method to return a string value of "ManagerBookList", which corresponds to an 
+entry in the XML policy store file for product "1". The entry looks like:<p>
+
+<pre>
+&lt;protected-resource name="ManagerBookList">
+    &lt;principal type="role" name="manager" acl="-r---"/>
+    &lt;principal type="user" name="the-manager" acl="-r-cd"/>
+&lt;/protected-resource>
+</pre>
+
+which gives anyone in the role of manager read permission to the ManagerBookList view helper object, but read, control and 
+delete permissions to the specific manager that has been assigned the book list. In the ManagerBookList view helper, delete
+permissions could mean that a book is removed from their list and control means a book is assigned to a different manager. The
+semantics of each permission is for the developer to decide, but typically instansiate means 'to create new instances', 
+read means 'to read', write means 'to write or edit', control means 'to affect an internal state change', 
+delete means 'to delete'. The meaning of each permission is fairly straightfoward, with control being the only one
+that provides some flexibility in interpretation. Even with a very complex model, the 5 permissions defined by
+Hippikon are all that is needed.<p>
+
+At this stage, the servlet can obtain the permissions for the book list through Hippikon:
+
+<pre>
+// the FrontController makes the ctx available on the 
+// request by a named attribue of 'authContext'
+//
+Logger log = // get your log4j or whatever log for your system
+AuthorizationContext ctx = (AuthorizationContext)request.getAttribute("authContext"); 
+ManagerBookListHelper listHelper = // look up the helper through hibernate
+PermissionSet perms = PermissionsFactory.getPermissions(listHelper, ctx);
+
+// now check if we at least have read access
+//
+if (!perms.canRead()) {
+    log.warn("Illegal access attempt");
+    throw new IllegalAuthorizationException("No read permissions for book list view");
+}
+</pre>
+
+If the permission set has read access, the list of books can safetly be placed on the HttpResponse for the JSP to use. 
+The servlet then forwards to the correct JSP that makes things look pretty. The JSP can check the PermissionSet
+object <code>perms.canControl()</code> and <code>perms.canDelete()</code> to display href URL links to
+the action servlets where Jo can delete a book or reassign to another manager.<p>
+
+At this stage we have only dealt with the logic required to determine permission for static roles, but how
+do we find out if Jo is the specific manager assigned to the specific book list? We cannot define these
+rules in static XML, but need to take the dynamic nature of two objects (the user and the book list) into 
+account. In Hippikon, we do this by using the Policy callback mechanism.<p>
+
+The developer would implement a small class that extends <code>com.hippikon.security.DefaultObjectPolicy</code>,
+which would look like:
+
+<pre>
+public class ManagerBookListPolicy extends DefaultObjectPolicy {
+
+	private ManagerBookList list;
+
+	// to follow the ruls of the Policy interface, we have to
+	// provide this constructor then downcast our ProtectedResource
+	// to the type of object we expect in this callback class
+	//
+	public ManagerBookListPolicy(ProtectedResource res, AuthorizationContext ctx)
+	throws IllegalAuthorizationException {
+		super(res, ctx);
+		this.list = (ManagerBookList)res;
+	}
+
+	// required method of com.hippikon.security.Policy
+	//
+	// here we check if the user accessing the book list
+	// is the same as the assigned manager on the book list
+	// object. If so, we return the user principal type 'the-manager'
+	// which corresponds to the entry in the policy store
+	//
+	protected List determineUserPrincipals() {
+		List list = new ArrayList();
+		if (ctx.getUserGUID().equals(list.getAssignedManagerGUID()) {
+			list.add("the-manager");
+		}
+		return list;
+	}
+}
+</pre>
+
+The last step is to define the callback Policy class for the ProtectedResource class in our
+<code>hippikon.product-id.[productID].resource.policies</code> file for product "1".:
+
+<pre>
+ManagerBookList.policy.classname=com.myDomain.security.ManagerBookListPolicy
+</pre>
+
+At deployment, the <code>hippikon.product-id.1.resource.policies</code> file 
+and the XML policy store file (<code>hippikon.product-id.1.policy-store.xml</code>) only need to be placed somewhere on the 
+classpath and Hippikon will pick them up. You do not need to define any environment or system property.<p>
+
+The above Policy code will automatically be invoked by Hippikon in order to determine the complete
+set of user principals to be added to the role principals at runtime. The strongest set of 
+permissions found for all principal types will be combined. In the above example, Jo's unique 
+identifier will be the same as the <code>getAssignedManagerGUID()</code> method implemented
+on the view helper object, and the user principal of 'the-manager' will be added to the principal
+list.<p>
+
+While this overview contains a lot of content, it should be remembered what we did to configure
+the permissions for the view helper:
+
+<ul>
+<li>Create an AuthenticationContext object and make it available through a FrontController
+<li>Extend ProtectedResource to make sure our view helper was protected by Hippikon
+<li>Add the permission rules for the view helper to the XML policy file
+<li>Create a small callback class
+<li>Add the class to the resource.policies file
+</ul>
+
+To take this example one step further and introduce a layer of complexity that would cause most
+authorization systems to break, we could introduce a child object of the book list that inherits
+the parent permissions but is only available to the role of writers. The XML file would be changed to read
+as follows:<p>
+
+<pre>
+&lt;protected-resource name="ManagerBookList">
+
+    &lt;principal type="role" name="manager" acl="-r---"/>
+    &lt;principal type="user" name="the-manager" acl="-r-cd"/>
+
+	&lt;protected-resource name="CopyrightNotice">
+            &lt;principal type="role" name="writer" acl="-rwcd"/>
+            &lt;principal type="role" name="manager" acl="-----"/>
+            &lt;principal type="user" name="the-manager" acl="-----"/>
+	&lt;/protected-resource>
+
+&lt;/protected-resource>
+</pre>
+
+Here we have introduced an object hierachy and demonstrated how permission inheritance and overrides work 
+within Hippikon. The proteced resource for CopyrightNotice will inherit those of the parent ManagerBookList, 
+for all defined principals, but we needed to block access by managers and the-writers. By overriding the
+principal entry in the CopyrightNotice definition only the role of writer will get read permission.<p>
+
+The code to obtain the permission for a child CopyrightNotice and the parent ManagerBookList would be:<p>
+
+<pre>
+// the FrontController makes the ctx available on the 
+// request by a named attribue of 'authContext'
+//
+Logger log = // get your log4j or whatever log for your system
+AuthorizationContext ctx = (AuthorizationContext)request.getAttribute("authContext"); 
+ManagerBookListHelper listHelper = // look up the helper through hibernate
+CopyrightNotice notice = listHelper.getCopyrightNotice();
+List resourceList = new ArrayList();
+resourceList.add(listHelper);
+resourceList.add(notice);
+PermissionSet perms = PermissionsFactory.getPermissions(resourceList, ctx);
+
+// now check if we at least have read access
+// to the child copyright notice object
+//
+if (!perms.canRead()) {
+    log.warn("Illegal access attempt");
+    throw new IllegalAuthorizationException("No read permissions for book list view");
+}
+</pre>
+
+This overview provides a straightforward example of two likely authorization rules, but only scratches
+the surface of the type of security models that can be implemented using Hippikon. From here it is
+recommended that you read through the <a href="documentation.htm">Developer Manual</a>.<p>
+
+</div>
+
+</body>
+</html>

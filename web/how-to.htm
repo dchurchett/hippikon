@@ -1,0 +1,134 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="mainstyle.css" />
+<title>Hippikon Open Source Authorization API</title>
+</head>
+<body>
+
+<h2><span class="title">Hippikon</span><br>
+Open Source Authorization API for Java Applications</h2>
+
+<div class="sidebar">
+<a class="sidebar" href="index.html">Home</a><br>
+<a class="sidebar" href="about.htm">About</a><br>
+<a class="sidebar" href="overview.htm">Overview</a><br>
+<a class="sidebar" href="how-to.htm">Integration</a><br>
+<a class="sidebar" href="download.htm">Download</a><br>
+<a class="sidebar" href="documentation.htm">Manual</a><br>
+<a class="sidebar" href="docs/index.html">Javadocs</a><br>
+<a class="sidebar" href="http://sourceforge.net/tracker/?group_id=139356&atid=743293">Bug Reports</a><br>
+<a class="sidebar" href="http://www.hippikon.com/forum">User Forum</a><br>
+<a class="sidebar" href="http://www.hippikon.com/blog/index.php">Blog</a>
+</div>
+
+<div class="sflogo">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=139356&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</div>
+
+<div class="main">
+
+<h2>Integration How-To</h2>
+
+Hippikon is not tied to any specific method of implementing Java applications and can, therefore, easily be integrated with
+any Java based application. For convenience we have listed some examples to help bootstrap the use of Hippikon and lower 
+the bar of entry for reusing the library.<p>
+
+If there are any other examples you would like to see here, please file a 
+<a href="http://sourceforge.net/tracker/?group_id=139356&atid=743294">support request</a>.<p>
+
+<h2>Basic J2EE Integration</h2>
+
+J2EE integration is very straightforward and revolves around your application having implemented the 
+FrontController design pattern. Hopefully you will have done this already as the FrontController provides
+many advantages and a single location in which to place logic that is orthogonal to the entire application.<p>
+
+There is no reason why a J2EE backend could be used for a non-web based application, but since the large majority
+of J2EE applications are HTTP client based this is the scenario detailed below. For the most part the FrontController
+pattern has already been documented in the major players in J2EE front-end technology, and it is here that Hippikon
+would most likely be plugged into.<p>
+
+In short, the FrontController can be a JSP or preferably a Servlet that has all HTTP requests routed to it, either by 
+using the <code>servlet-mapping</code> directive in the web.xml file, or as a filter configured in the same way, and then
+forwards the request to the target JSP/Servlet. The FrontController can be thought of as an interceptor for all HTTP requests.<p>
+
+Since the FrontController JSP or Servlet gets to examine every request into your application, is the place to check for an authenticated 
+user, to find out which product is being accessed by the user (if your application is decomposed into multiple products) and 
+to record the login/access attempt in a log file if you wish.<p>
+
+The FrontController would ensure the user is authenticated and redirect them to a login page if not. Alternatively your application
+may be integrated with something like Netegrity SiteMinder, which handles all this for you. Suffice to say, once your user has been
+authenticated your FrontController can pull information from cookies or the request headers in order to construct a valid
+<code>com.hippikon.security.AuthorizationContext</code> object and place on the response header for the target JSP/Servlet to use.
+
+The hippikon.jar file would need to be placed inside either a global location for all your web applications (preferable), or within
+the WEB-INF/lib directory of your bundled WAR file. Most servlet engines/application servers have known locations on their classpaths
+where you can drop global files. You can use this global location to also house your <code>resource.policies</code> and 
+<code>policy-store.xml</code> files.
+
+<ul>
+<li><a href="http://www.caucho.com">Resin</a> - use the servlet-mapping directive or a servlet filter in web.xml
+<li><a href="http://jakarta.apache.org/tomcat">Tomcat</a> - use the servlet-mapping directive or a servlet filter in web.xml
+<li><a href="http://www.jboss.org">JBoss</a> - Tomcat is part of JBossAS. Configuration is for the same as Tomcat.
+<li><a href="http://struts.apache.org">Struts</a> - Struts provides its own FrontController in the form of an ActionServlet. The ActionServlet is where the AuthorizationContext could be created and made available to all Action classes.
+<li>Spring <span style="background-color:yellow">[TO-DO]</span><p>
+</ul>
+
+<h2>JAAS or JACC Integreation</h2>
+
+Hippikon can easily co-exist with a JAAS implementation by delegating the Authentication mechanism to the JAAS framework, and then examining
+the LoginContext class to determine who the authenticated user is. At this point Hippikon can then be used to enforce rich, nested, hierachy
+based authorization logic that decouples permissions from the objects themselves.
+
+<h2>Swing Integration</h2>
+
+Place the hippikon.jar file on the classpath for the application, along with the <code>resource-policies</code> and 
+<code>policy-store.xml</code> files for Hippikon to find. Ensure there is some main point of entry into the Swing application
+(a logon screen if you are authenticating users, and an even listener to process the user credentials). Once authenticated in 
+an event handler, the AuthorizationContext object can be populated and made available as method arguments, as a private variable
+with class scope or as a serialized object.<p>
+
+There is no right or wrong way but integration with Swing is probably the easiest of
+all uses for hippikon. Once permissions have been established, they can be obtained from the PermissionsFactory and used to 
+determine what parts of the Swing application are visible or enabled.
+
+<h2>Using Hippikon as a Licensing Mechanism</h2>
+
+One use of Hippikon is to use the Permissions object as a means of governing licensing within an application. Often an application
+licensing model is governed by what the user has paid for and may involve a node-locked license that is checked by the application
+logic or in some cases a remote call to a licensing server. Since Hippikon is currently driven from a local XML configuration 
+file, a hosted appliation or a remotely stored configuration file is suited best so users may not change the permissions rules 
+by editing their local files.<p>
+
+A very easy way to alter permissions based on licensing constraints is to create a custom <code>Policy</code> class that 
+represents an application object that will always form the top most node of the object hierachy. For instance, consider the
+following suite of applications in a hosted web application:
+
+<ul>
+<li>Sales Tool
+<li>Reporting Tool
+<li>Data Entry Tool
+<li>User Administration
+<li>Application Configuration Tool
+</ul>
+
+These parts of an application could be enabled/disabled based on the license for the user, which can be consulted by a Policy to 
+change the Permission set (turn off read access for example). Would I use Hippikon solely for enforcing licensing rules? Probably not, but
+if I already had Hippikon installed and configured for an application I would consider using it for licensing rules to simplify
+the business logic and maintain a consistent approach to application access.
+
+<h2>Using Hippikon for System Maintenance</h2>
+
+In database driven applications, especially those that are hosted, there are times when database upgrades may require an application
+to be taken out of service due to the possibility of users writing data while an updgrade is taking place. As we all know, any 
+downtime is paid for in someway and to be avoided if possible. With Hippikon it is possible to turn off write access at runtime without
+touching any code, and then turn back access in the same way.<p>
+
+All it would take is a system check in the top-most Policy class that would be executed by the Hippikon framework on every access 
+request. If a flag (possibly set in the database), or some file (PID file for instance) exists then the permissions returned to the
+application could be set to read-only right in the policy. The same check would then be made once the flag or PID file is reset 
+and the original permissions would be returned to the user unaffected.<p>
+
+</div>
+
+</body>
+</html>

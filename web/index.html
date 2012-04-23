@@ -1,0 +1,87 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="mainstyle.css" />
+<title>Hippikon Open Source Authorization API</title>
+</head>
+<body>
+
+<h2><span class="title">Hippikon</span><br>
+Open Source Authorization API for Java Applications</h2>
+
+<div class="sidebar">
+<a class="sidebar" href="index.html">Home</a><br>
+<a class="sidebar" href="about.htm">About</a><br>
+<a class="sidebar" href="overview.htm">Overview</a><br>
+<a class="sidebar" href="how-to.htm">Integration</a><br>
+<a class="sidebar" href="download.htm">Download</a><br>
+<a class="sidebar" href="documentation.htm">Manual</a><br>
+<a class="sidebar" href="docs/index.html">Javadocs</a><br>
+<a class="sidebar" href="http://sourceforge.net/tracker/?group_id=139356&atid=743293">Bug Reports</a><br>
+<a class="sidebar" href="http://www.hippikon.com/forum">User Forum</a><br>
+<a class="sidebar" href="http://www.hippikon.com/blog/index.php">Blog</a><p>
+</div>
+
+<div class="sflogo">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=139356&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</div>
+
+<div class="main">
+Hippikon is a powerful authorization API that was developed for enterprise software applications and is now 
+provided free under the <a href="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</a>. In other words, what was once 
+proprietary software developed for a highly complex enterprise application where security was paramount is now a 
+free open source project!</p>
+
+Hippikon provides features not found in existing APIs, such as Sun's JAAS. It is an XML driven mechanism that allows static 
+permission rules to be defined, and also allows object state, object hierachy, user associations, permission 
+inheritance and permission overrides into account at runtime. The API is small, fast and simple to use. The design
+ follows a logical domain model based on a number of standard security design patterns.</p>
+
+<h2>Highlights</h2><p>
+
+<ul>
+<li>May be used in any Java application and is agnostic of frameworks such as J2EE, Spring, Struts etc,
+<li>XML configuration file defines static permissions and valid object hierachy
+<li>A simple plugin/callback mechanism is provided to configure permissions for object instance at runtime
+<li>A single instance may configure multiple products or applications
+<li>Decoupled from authentication mechanisms allowing any to be used (such as basic password, LDAP, Digital Certificates etc,)
+<li>Easy API to learn and use
+</ul>
+
+For more information about Hippikon, why it was created, how it was created and what
+it can be used for, read through the <a href="overview.htm">overview</a> section.
+
+<h2>What Does Hippikon Do?</h2>
+
+The Hippikon security model makes a clear separation of concerns between the two primary
+aspects of an overall security mechanism for a software system:
+
+<ul>
+<li><b>Authentication</b>: Is the user who they say they are? 
+<li><b>Authorization</b>: What can an authenticated user do in a system?
+</ul>
+
+Hippikon's focus is in providing a convenient object oriented API for handling <b>authorization</b> 
+that encapsulates a set of permissions for a user accessing various objects in a system. The granularity of 
+Hippikon is purely based on objects, and not static pieces of code or object methods.  A typical scenario 
+for securing a java application involves first authenticating a user then determing authorization rules within 
+the system i.e., what can they do within the system, what data can they read?, what actions can they perform?<p>
+
+If your application uses a simple role based system where one user may only have one role, then Hippikon
+may not provide much benefit. However, if you find yourself writing a system where:<p>
+
+<ul>
+<li>a user can have multiple roles or, 
+<li>a user can have multiple associations with an object (e.g., the creator, the maintainer, the owner), or 
+<li>there is a need to take the object's internal state into account (e.g., if immutable turn off read access), or
+<li>the object hierachy must be taken into account (e.g., a note belongs to a document, which is immutable), or
+<li>a combination of all the above
+</ul>
+
+things will get out of hand very quickly and the code ends up being littered with complex conditional checks. Here
+is where Hippikon will simplify the development effort tremendously. To get started take a look through the
+<a href="overview.htm">overview</a>, which provides a usage scenario,  followed by 
+the <a href="documentation.htm">manual</a>, which dives deeper into the framework internals.
+</div>
+
+</body>
+</html>

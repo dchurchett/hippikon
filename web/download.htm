@@ -1,0 +1,174 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="mainstyle.css" />
+<title>Hippikon Open Source Authorization API</title>
+</head>
+
+<body>
+
+<h2><span class="title">Hippikon</span><br>
+Binary and Source Downloads</h2>
+
+<div class="sidebar">
+<a class="sidebar" href="index.html">Home</a><br>
+<a class="sidebar" href="about.htm">About</a><br>
+<a class="sidebar" href="overview.htm">Overview</a><br>
+<a class="sidebar" href="how-to.htm">Integration</a><br>
+<a class="sidebar" href="download.htm">Download</a><br>
+<a class="sidebar" href="documentation.htm">Manual</a><br>
+<a class="sidebar" href="docs/index.html">Javadocs</a><br>
+<a class="sidebar" href="http://sourceforge.net/tracker/?group_id=139356&atid=743293">Bug Reports</a><br>
+<a class="sidebar" href="http://www.hippikon.com/forum">User Forum</a><br>
+<a class="sidebar" href="http://www.hippikon.com/blog/index.php">Blog</a>
+</div>
+
+<div class="sflogo">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=139356&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</div>
+
+
+<div class="main">
+Hippikon is provided for download as a compiled binary and source package. The API documentation
+is available <a href="docs/index.html">here</a> and provided with both bundles. Only production ready releases 
+will be made available here.<p>
+
+<b style="font-size: 12pt">Note: All downloads link to the 
+<a href="http://sourceforge.net/project/showfiles.php?group_id=139356">sourceforget.net project</a> download page.<p></b>
+
+<h2>Hippikon 3.3</h2>
+
+Hippikon 3.3 provides major new functionality in the PermsNavigator GUI tool, having added the ability
+to create and edit XML Policy Store files as well as simply viewing them. No core framwork changes were
+made in order to change the GUI tool but extensive work was done on the tool itself, which is all
+written in Swing.<p>
+
+<ul>
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.3.tar.gz?download">hippikon-3.3.tar.gz</a> - for unix
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.3.zip?download">hippikon-3.3.zip</a> - other platforms
+</ul>
+
+To run the PermsNavigator and take a tour of the new features, downlad the latest release, cd into
+the directory where you extracted hippikon and type:<p>
+
+<pre>
+ant run-gui
+</pre>
+
+At this time no startup scripts have been included in the distribution.
+
+
+<h2>Hippikon 3.2</h2>
+An emergency patch release to fix bug #1234624 - 
+the ant build script that caused hippikon.jar to be unpopulated with class files. 
+
+<ul>
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.2.tar.gz?download">hippikon-3.2.tar.gz</a> - for unix
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.2.zip?download">hippikon-3.2.zip</a> - other platforms
+</ul>
+
+<h2>Hippikon 3.1</h2>
+Adds support for JDK1.5 while retaining compatibility with JDK 1.4. JDK 1.2.2 is dropped as a platform
+due to changes in the reflection APIs, which is a tad frustrating.
+
+<ul>
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.1.tar.gz?download">hippikon-3.1.tar.gz</a> - for unix
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.1.zip?download">hippikon-3.1.zip</a> - other platforms
+</ul>
+
+This release contained 3 lines of source code in hidden classes and is therefore identical in all ways
+to Hippikon 3.0, including the download bundle directory structure. See below for details.
+
+<h2>Hippikon 3.0</h2>
+The first version ported from the original code base that has 
+been in production for over 3 years. Hippikon was Written for JDK 1.2.2 and has been tested on JDK 1.4. Hippikon
+3.0 does not work or compile with JDK 1.5 and will not be moved forward with future versions i.e., JDK 1.2.2 will
+no longer be supported.
+
+<ul>
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.0.tar.gz?download">hippikon-3.0.tar.gz</a> - for unix
+<li><a href="http://prdownloads.sourceforge.net/hippikon/hippikon-3.0.zip?download">hippikon-3.0.zip</a> - other platforms
+</ul>
+
+
+Both achive files extract to the following directory structure:<p>
+
+<pre>
+hippikon-3.0
+  |
+  + javadoc               (generated javadocs)
+  + lib                   (compiled hippikon.jar plus dependencies)
+  + license.txt           (the LGPL License in full)
+  + README.txt            (general notes)
+  + build.xml             (the main build file for the system)
+  + Hippikon_Manual.pdf   (a PDF copy of the online developer manual)
+  + src                   (the source code)
+    |
+    + java-src            (contains the hippikon source code)
+    + test-src            (contains the hippikon test code)
+       |
+       + config           (test XML policy store and resource.policies)
+</pre>
+
+To install, extract to the file system, copy lib/*.jar to your application classpath resolving any
+possible conflicts with other versions of junit, log4j or ant.<p>
+
+To launch the Swing GUI permissions viewer, ensure hippikon.jar and log4j.jar are in
+your classpath or pass to the JVM as the -classpath argument:
+
+<pre>
+java com.hippikon.security.PermsNavigator
+</pre>
+
+You will then be able to navigate to one of the example policy store XML files stored
+under <code>src/test-src/config</code>.<p>
+
+<h2>Hippikon 3.0 Change Log</h2>
+
+Very few changes were made, those being to repackage and remove 
+some proprietary references. Other changes include:<p>
+
+<ul>
+<li>The logging system was updated to use <a href="http://jakarta.apache.org/log4j">log4j</a> and
+a log4j.conf is provided to get the component working out-of-the-box
+<li>The unit tests now use the latest version of JUnit to avoid all the pesky javac warnings 
+due to the <code>assert</code> keyword having been introduced in the JDK 1.4
+<li>XML Parsing is delegated to the APIs bundled in the JDK
+<li>the Ant build script is updated to create the tar and zip bundles and to launch
+the Swing GUI for viewing XML policy store files
+<li>Added the LGPL license header to all files
+<li>Added <code>getDefinedPrinicipals()</code> to the <code>PolicyStore</code> interface to
+support the PermsNavigator
+</ul>
+
+<h2>External Dependencies</h2>
+
+The following APIs are bundled with Hippikon in the lib directory:
+<ul>
+<li>Junit 3.8.1
+<li>log4j-1.2.9
+</ul>
+
+To build and run Hippikon you will need to have installed JDK 1.4 or 1.5 (as of Hippikon 3.1 or greater) 
+and have the JAVA_HOME environment variable set to the installation directory. You will also need to 
+have installed ANT 1.6.2 or greater (the build file was written for ANT 1.6.2) and have the ANT_HOME 
+environment variable set to the ANT installation directory. You will also need to have $ANT_HOME/bin in your path. Ant 
+should pickup the right version of java from the JAVA_HOME variable but if you have another version of 
+Java in your path you may have problems so check here first.<p>
+
+You will need to have junit.jar (located in the lib directory of the hippikon release) 
+in your $ANT_HOME/lib directory in order to use the build script from the command 
+line. If you are using an IDE see the IDE documentation for setting up sources and classpaths in order to get
+the build script working.<p>
+
+See the <code>README.txt</code> file bundled with the download package for general release details.<p>
+
+<h2>Obtaining The Source</h2>
+
+Anyone may obtain the source code by downloading one of the official releases, or from 
+the CVS repository. Instructions on using CVS for Hippikon can be found on 
+<a href="http://sourceforge.net/cvs/?group_id=139356">the sourceforge CVS project page</a>.<p>
+
+To obtain the java source files, checkout the module named 'authorization' off the TRUNK for the
+latest code (may not be stable) or a known tag, which can be found by browing the CVS repository
+using sourceforge's browser tool (located on the same CVS project page).<p><p>
+

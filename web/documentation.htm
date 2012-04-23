@@ -1,0 +1,791 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="mainstyle.css" />
+<title>Hippikon Open Source Authorization API</title>
+</head>
+
+<body>
+
+<h2><span class="title">Hippikon</span><br>
+Open Source Authorization API for Java Applications</h2>
+
+<div class="sidebar">
+<a class="sidebar" href="index.html">Home</a><br>
+<a class="sidebar" href="about.htm">About</a><br>
+<a class="sidebar" href="overview.htm">Overview</a><br>
+<a class="sidebar" href="how-to.htm">Integration</a><br>
+<a class="sidebar" href="download.htm">Download</a><br>
+<a class="sidebar" href="documentation.htm">Manual</a><br>
+<a class="sidebar" href="docs/index.html">Javadocs</a><br>
+<a class="sidebar" href="http://sourceforge.net/tracker/?group_id=139356&atid=743293">Bug Reports</a><br>
+<a class="sidebar" href="http://www.hippikon.com/forum">User Forum</a><br>
+<a class="sidebar" href="http://www.hippikon.com/blog/index.php">Blog</a>
+</div>
+
+<div class="sflogo">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=139356&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</div>
+
+<div class="main">
+<h2>Documentation & Developer Reference Guide</h2>
+<dl>
+  <dt><dd><a href="#Introduction"><font size="+1"><b>Introduction</b></font></a>
+  <dl>
+    <dt><dd><a href="#Who"><b>Who Should Read This Document</b></a>
+    <dt><dd><a href="#RelatedDocs"><b>Related Documentation</b></a>
+    <dt><dd><a href="#Terminology"><b>Terminology</b></a>
+  </dl><br>
+
+  <dt><dd><a href="#Core"><font size="+1"><b>Core Classes and Interfaces</b></font></a>
+    <dl>
+      <dt><dd><a href="#Common"><b>Common Classes</b></a>
+      <dl>
+        <dt><dd><a href="#AuthorizationContext"><b>AuthorizationContext</b></a>
+        <dt><dd><a href="#ProtectedResource"><b>ProtectedResource</b></a>
+        <dt><dd><a href="#PermissionSet"><b>PermissionSet</b></a>
+        <dt><dd><a href="#PermissionsFactory"><b>PermissionsFactory</b></a>
+        <dt><dd><a href="#IllegalAuthorizationException"><b>IllegalAuthorizationException</b></a>
+      </dl>
+
+      <dt><dd><a href="#Authorization"><b>Authorization Classes</b></a>
+      <dl>
+        <dt><dd><a href="#Policy"><b>Policy</b></a>
+        <dt><dd><a href="#PolicyStore"><b>PolicyStore</b></a>
+      </dl>
+    </dl>
+  </dl>
+  <dl>
+      <dt><dd><a href="#SDKExamples"><font size="+1"><b>SDK Examples</b></font></a>
+      <dl>
+        <dt><dd><a href="#PolicyImpl"><b>Implementing specialized Policy classes</b></a>
+        <dt><dd><a href="#PoliciesFile"><b>The resource.policies file</b></a>
+        <dt><dd><a href="#ExtensionsCache"><b>Policy Store Extensions Cache</b></a>
+      </dl>
+    </dl>
+  </dl>
+  <dl>
+      <dt><dd><a href="#PermissionsNavigator"><font size="+1"><b>Permissions Navigator GUI</b></font></a>
+      <dl>
+        <dt><dd><a href="#ViewingFiles"><b>Viewing XML Policy Store Files</b></a>
+        <dt><dd><a href="#CreatingFiles"><b>Creating XML Policy Store Files</b></a>
+      </dl>
+    </dl><br>
+  </dl>
+</dl>
+
+<!------------------------------------------------------------------------>
+
+
+<a name="Introduction">
+<h2>Introduction</h2></a>
+
+
+The Hippikon Authorization framework provides an object-oriented, white-box framework that 
+allows for complex authorization security models to be configured through XML, and enhanced
+by a callback mechanism if ruther runtime checking is required. The system is based on
+sets of permissions created by taking user associations, object state/behaviour and object
+hierachy into account.<p>
+
+The following list provides an overview of Hippikon's features:<p>
+
+<ul>
+<li>Authorization logic and permission ACLs is decopuled from business objects
+<li>Policy rules may be reused across different products in an application domain
+<li>Permissions for each product are stored in a persistent PolicyStore that
+    <ul>
+    <li>Supports n-deep nested objects
+    <li>Supports different permissions for objects that change with regard to their object hierachy
+    <li>Supports inheritance and overrides of permissions within a object hierachy
+    </ul>
+<li>Clients obtain permissions from the PermissionsFactory class by way of a single API call
+<li>Integrates easily into any Java application and is agnostic of frameworks such as J2EE, Struts or Spring.
+<li>The API is based on standard security Design Patterns
+</ul><p>
+
+<a name="Who">
+<h2>Who Should Read This Document</h2></a>
+
+
+This document is intended for developers who create new products written in Java
+or who work on authorization logic within Java applications.<p>
+
+<a name="RelatedDocs">
+<h2>Related Documentation</h2></a>
+
+This document assumes you are already familiar with Java 1.2 Standard Edition 
+development. Prior security domain knowledge is preferred but not essential. You should
+also be familiar with XML, HTTP and some basic encryption terminology.<p>
+
+Other sources of information that influenced the API include:
+
+<ul>
+  <li><a href="http://java.sun.com/security/jaas/doc/acsac.html">JAAS White Paper</a><br>
+  <li><a href="http://java.sun.com/products/jce">Java Cryptography Extension</a>
+  <li><a href="http://www.joeyoder.com/papers/patterns/Security/appsec.pdf&e=10313">Patterns for Enabling Application Security - </a>Yoder & Barcalow [a must read]
+  <li><a href="http://www.martinfowler.com/apsupp/roles.pdf&e=10313">Martin Fowler: Dealing with Roles</a>
+  <li><a href="http://www.acm.uiuc.edu/workshops/security/">Practical UNIX Security</a>
+  <li><a href="http://www.opengroup.org/dce/info/papers/tog-dce-pd-1296.htm">DCE Overview</a>
+  <li><a href="http://java.sun.com/products/jndi/tutorial/ldap/security/index.html">LDAP Security</a>
+</ul><p>
+
+<!------------------------------------------------------------------------>
+<a name="Terminology">
+<h2>Terminology</h2></a>
+
+<table align=center>
+<tr><td><b>ACL</b></td><td>Access Control List</td></tr>
+<tr><td><b>Principal</b></td><td>an association between a user and a system or object an ACL can be defined for</td></tr>
+<tr><td><b>Role</b></td><td>a type of principal that cuts across all users and all objects</td></tr>
+<tr><td><b>Credentials</b></td><td>a piece of data that identifies a user</td></tr>
+<tr><td><b>Authentication</b></td><td>the mechanism of verifying a user based on supplied credentials</td></tr>
+<tr><td><b>Authorization</b></td><td>the mechansim of determining what actions an authenticated user can perform</td></tr>
+<tr><td><b>Policy</b></td><td>one or more rules that determine authorization rules for a user</td></tr>
+<tr><td><b>Product</b></td><td>a specific application that provides services to a user</td></tr>
+<tr><td><b>Account</b></td><td>an entity or organization that contains users</td></tr>
+<tr><td><b>Product Subscription</b></td><td>a product that an account and its users has been granted access to</td></tr>
+</table>
+
+<a name="Core">
+<h2>Core Classes and Interfaces</h2></a>
+
+
+The Hippikon core classes, interfaces and mechanisms can be broken into 3 categories: 
+Common, Authorization and SDK Reference.
+<ul>
+<li><a href="#Common">Common Classes</a> 
+  <ul>
+  <li><a href="#AuthorizationContext">AuthorizationContext</a>, 
+<a href="#PermissionsFactory">PermissionsFactory</a>, <a href="#ProtectedResource">ProtectedResource</a>, 
+<a href="#IllegalAuthorizationException">IllegalAuthorizationException</a>
+  </ul><p>
+
+<li><a href="#Authorization">Authorization Classes</a>
+  <ul>
+  <li><a href="#Policy">Policy</a>, <a href="#PolicyStore">PolicyStore</a>,
+  </ul><p>
+
+<li><a href="#SDKReference">SDK Reference</a>
+  <ul>
+  <li><a href="#PolicyImpl">Creating Policy implementations</a>, 
+<a href="#PolicyImpl">Implementing specialized Policy classes</a>,
+<a href="#PoliciesFile">The resource.policies file</a>, 
+<a href="#ExtensionsCache">Policy Store Extensions Cache</a>
+  </ul>
+</ul>
+
+<a name="Common">
+<h2>Common Classes</h2></a>
+
+Common classes are those classes with which the application logic interacts
+to determine the permissions of a user at runtime. All other classes
+are internal to the SSF or part of the SDK.<p>
+
+<a name="AuthorizationContext">
+<h3>com.hippikon.security.AuthorizationContext</h3></a>
+
+A key Hippikon class is <code>com.hippikon.security.AuthorizationContext</code></a>, 
+which represents a user who has been authenticated by the an applications Authentication 
+mechanism or subsystem and the product they attempt to access. It encompasses the
+entity's role principals, user identifier, the customer or user account to which they belong, 
+the products to which their customer or user account has subscribed to and the product they are
+accessing.<p>
+
+The role principals are just one type of principal that determines
+permissions for a user. Others may be determined at runtime based on the 
+association between a user and an object or other internal logic of the 
+object. A principal is an identifier assigned to a user actor, which may be a person, 
+or external system, in the context of an authorization request.<p>
+
+Each user who belongs to a corporate account is assigned a unique identifier
+and at least one role principal before authorization can proceed. 
+The user may also be associated with a resource that permits stronger or 
+weaker permissions. This principal is defined as a user-type principal.<p>
+
+Principal types can include <i>role principals</i> (e.g., "manager"), <i>user principals</i>
+(e.g., "assigned-user"), <i>SSN principal</i> (e.g., "234-23-2332") or <i>access principal</i>
+(e.g., "wireless", "web"). The two principals currently supported by SSF are role 
+and user, although it is easy to add more as needed.<p>
+
+The AuthorizationContext object must be created for each authorization request. 
+Web based applications may create a subclass class that interacts with HttpRequest objects to obtain and cache 
+user data in an encrypted cookie that is valid for the user's session.<p>
+
+<h3><a name="ProtectedResource">com.hippikon.security.ProtectedResource</h3></a>
+
+Any object within an application that needs protection by the 
+authorization framework must extend from <code>com.hippikon.security.ProtectedResource</code>.<p>
+
+The ProtectedResource abstract class defines a single method:<p>
+
+<code>
+public static String getResourceName() throws ProtectedResourceNamingException
+</code><p>
+
+
+Subclasses must override this method as the default implementation throws an
+automatic exception if invoked. The return value of this method should describe
+the class of ProtectedResource that can be used as a key in a PolicyStore 
+implementation.<p>
+
+The return value is also used to bind Policy implementations to ProtectedResource
+classes at deployment. Because developers of future applications need to know the return 
+value of this method explicitly so <b>this should be reflected in the javadoc 
+documentation</b>.<p>
+
+Developers are advised not to return the classname using 
+<code>this.getClass().getName()</code> because many objects may be developed
+that need the same protected. For instance, a business object named RFQ may
+provide objects such as SummaryRFQBean, DetailedRFQBean or RFQBean for
+efficiency in a J2EE application (see the Value Object design pattern). Each 
+of these objects should be considered an RFQ and have the same permissions.<p>
+
+To avoid the need to create multiple or duplicate entries in a PolicyStore each business object 
+should implement <code>getResourceName()</code> to return the same value or, preferably, extend
+from a class that itself extends ProtectedResource. Each class would then inherit the 
+same return value from its superclass.<p>
+
+The permissions of a ProtectedResource may differ from each entry depending on the 
+object hierachy of an application. For example, an RFQ may be defined as a parent 
+object or a child object. In the latter case, the permissions may be affected 
+by the parent.<p>
+
+<h3><a name="PermissionSet">com.hippikon.security.PermissionSet</h3></a>
+
+The PermissionSet interface represents a set of actions a user is authorized
+to perform on a ProtectedResource. It is similar to the UNIX permission flags
+but defines five flags instead of three:<p>
+
+<code>
+public boolean canCreate()<br>
+public boolean canRead()<br>
+public boolean canWrite()<br>
+public boolean canControl()<br>
+public boolean canDelete()<br>
+</code><p>
+
+To prevent application logic from bypassing the authorization framework the PermissionSet
+interface provides no mutator methods of any kind, however the authorization framework
+implementation must be able to create new objects and manipulate the
+permissions as they are loaded from a PolicyStore.<p>
+
+To meet these requirements, the following classes are provided to Policy developers:<p>
+
+<code>
+com.hippikon.security.DefaultPermissionSet<br>
+com.hippikon.security.MutablePermissionSet
+</code><p>
+
+Neither of these classes provides public constructors, thus preventing clients from
+creating PermissionSet instances and potentially altering the PermissionSet retrieved
+from a <a href="#PermissionsFactory">PermissionsFactory</a>. The <a href="#Policy">Policy</a>
+abstract class provides some toolkit methods, which provide controlled hooks that allow developers
+to create specialized logic for a ProtectedResource object.<p>
+
+The PermissionSet interface should be used only for authorization logic and not business
+or application logic, although application logic may semantically match a PermissionSet
+returned from a call to the PermissionsFactory. Consider the case where an RFQ object
+has been versioned and a user views one of the versions. The application logic may 
+enforce business rules that prevent version branching. Therefore, an RFQ version should 
+never be edited.<p>
+
+The application should employ its own logic to ensure no edit UI widgets 
+are presented as part of the view. The PermissionSet returned from the PermissionsFactory 
+may also have the WRITE permission disabled through a specialized Policy subclass that is 
+bound to the RFQ object through the <a href="#PolicyFile">resource.policies</a> file.<p>
+
+In general, it is dangerous for an application developer to rely on the PermissionSet 
+to determine a UI view, as there can be many reasons why a permission could be disabled.<p>
+
+<h3><a name="PermissionsFactory">com.hippikon.security.PermissionsFactory</h3></a>
+
+The PermissionsFactory class provides five methods that clients use to obtain
+a PermissionSet for one or more ProtectedResource objects, Class or 
+combination of both within an <a href="#AuthorizationContext">AuthorizationContext</a>:<p>
+
+<code>
+public static PermissionSet<br>
+getPermissions(List resources, AuthorizationContext ctx)<p>
+
+public static PermissionSet<br>
+getPermissions(List resources, Class c, AuthorizationContext ctx)<p>
+</code><p>
+
+The PermissionFactory methods are coupled to PolicyStore entries for an application. Each 
+application provides a top-level container or context for child ProtectedResource object types. The
+method arguments passed to the PermissionFactory must match the object hierachy defined within
+an application PolicyStore. It is the responsibility of the application developers to define
+the PolicyStore and ensure all other developers know the legal combinations of objects and 
+classes.<p>
+
+When a client needs to obtain a PermissionSet for an object defined as a child of one or
+more parents, the methods that take a List of ProtectedResources should be used. When 
+the client needs to check permissions for a class of ProtectedResource (to determine whether
+new instances may be created for example), the methods that take a Class as an argument
+should be used.<p>
+
+To provide a convenient API and remove the burden of creating List objects when there may
+only be one top-level ProtectedResource or Class, the PermissionsFactory provides the following 
+utility methods:<p>
+
+<code>
+public static PermissionSet<br>
+getPermissions(ProtectedResource res, AuthorizationContext ctx)<p>
+
+public static PermissionSet<br>
+getPermissions(ProtectedResource res, Class c, AuthorizationContext ctx)<p>
+
+public static PermissionSet<br>
+getPermissions(Class c, AuthorizationContext ctx)<p>
+</code><p>
+
+All methods may throw either 
+<code><a href="#IllegalAuthorizationException">com.hippikon.security.IllegalAuthorizationException</a></code>
+or <code>com.hippikon.security.ResourceNotFoundException</code>.<p>
+
+Although each method defined in the PermissionsFactory class is declared 
+<code>static</code>, the methods have been design to be thread-safe with minimal
+synchronization in order to maximize performance and remove class-level locking. The
+class is, therefore, suitable for server-side applications.<p>
+
+<h3><a name="IllegalAuthorizationException">com.hippikon.security.IllegalAuthorizationException</h3></a>
+
+The IllegalAuthorizationException signals whether any access to a ProtectedResource 
+is denied on the grounds that basic authorization data provided in the AuthorizationContext 
+is either not present or invalid. Such a condition would include:<p>
+
+<ol>
+<li>A user who has not been assigned at least one role
+<li>A user whose account is disabled
+<li>A user who belongs to an account with that has no access to a product (maybe disabled due to a missed payment)
+<li>A user belonging to an account that has a limit on the number of concurrent user sessions
+</ol><p>
+
+The IllegalAuthorizationException should not be used for application logic but should generate  
+a log entry or trigger a notification event. Any-time this exception is thrown a possible breach of security 
+may be underway that should be investigated promptly.<p>
+</blockquote>
+
+<!------------------------------------------------------------------------>
+
+<h2><a name="Authorization">Authorization Classes</h2></a>
+
+<h3><a name="Policy">com.hippikon.security.Policy</h3></a>
+
+The Policy abstract class provides application developers with hooks into 
+the white-box authorization framework and is the primary mechanism for 
+framework reuse.<p>
+
+Policy subclasses should be created where user principals defined in 
+an application <a href="#PolicyStore">PolicyStore</a> must be determined
+at runtime for a ProtectedResource, and which may change depending on the 
+application that hosts the object.<p>
+
+For example, an Document has a user principal defined in a publishing system
+as 'the-editor' with a PermissionSet of read, write and control. 
+In another application this user principal may have no meaning whatsoever and 'the-creator' 
+may take on a similar meaning.<p>
+
+The <code>com.hippikon.security.Policy</code> class is an implementation
+of the Strategy or Policy Design Pattern (Design Patterns: Elements of 
+Reusable Object-Oriented Software - GoF), and it decouples authorization
+logic from the implementation of a business entity object.<p>
+
+The alternative to using a Policy Design Pattern is to embed this 
+logic in the object itself. However, this alternative breaks the object-oriented
+paradigm because it breaks a cardinal rule of keeping related data and behaviour in once place. Not only would an 
+object provide its own interface to accomplish one set of coheseive tasks, but authorization logic is now included
+within it, and authorization logic is littered across the application code. Another option would be to use
+Aspect Oriented Programming techniques, but this would add yet another layer of complexity. The only coupling we
+have with Hippikon is through the ProtectedResource class, which passes OO-type questions such as 
+'Is an BusinessDocument a ProtectedResource?'
+
+The callback methods allow user principals to be determined at runtime on a 
+per instance or user basis. Further the callback methods allow specialized 
+authorization logic that can alter the PermissionSet obtained from a PolicyStore 
+to be modified in a controlled sandbox environment.<p>
+
+The class defines two callback methods and two toolkit methods previously 
+mentioned in the description of the <a href="#PermissionSet">PermissionSet</a>
+interface.<p>
+
+<code>
+protected List determineUserPrincipals()<br>
+protected List doFinal(PermissionSet perms)
+</code><p>
+
+The first method will most likely examine the return value of the
+<code>getUserGUID()</code> defined in the <code>AuthorizationContext</code>
+and compare with some logic specific to the ProtectedResource type. The Policy
+for an RFQ may be implemented as:<p>
+
+<pre>
+protected List determineUserPrincipals() {
+    List list = new ArrayList();
+    if (ctx.getUserGUID() == document.getEditorUserGUID()) {
+        list.add("the-editor");
+    }
+    return list;
+}
+</pre><p>
+
+When a List of ProtectedResource objects is passed to the 
+<a href="#PermissionsFactory">PermissionsFactory</a>, the framework determines
+which Policy subclass to instantiate by checking the <a href="#PolicyFile">resource.policies</a>
+file for the product being accessed. It then invokes the <code>determineUserPrincipals()</code>
+method for each Policy in order to build up the complete list of principals for the 
+AuthorizationContext; this includes the role principals and all user principals.<p>
+
+After all principals have been determined, each may be looked up in the PolicyStore
+created for the product order to obtain the complete set of permissions
+for a user.<p>
+
+Once the PermissionSet has been obtained for all principals, the final callback
+method <code>doFinal(PermissionSet perms)</code> is invoked in reverse order. This 
+method allows Policy implementations to affect a change in the PermissionSet passed
+back to the client based on specialized logic. For example, the developer of the 
+DocumentPolicy could turn off write, control and delete permissions
+if the Document object it protects was an immutable version.<p>
+
+The List of ProtectedResource names are made available to Policy subclasses by way of 
+the <code>getResourcePathInContext()</code> method, which may be examined in the 
+<code>doFinal(PermissionSet perms)</code> method should authorization logic
+needs to be implemented that depends on the object hierachy being accessed.<p>
+
+The <code>getResourcePathInContext()</code> method should be implemented by policies that
+are at the top of the object hierachy (i.e., the primary application container objects) 
+rather than subordinate policies.<p>
+
+The <code>com.hippikon.security.DefaultObjectPolicy</code> class covers 70-80% 
+of ProtectedResources for an application. This class handles all role principal lookup because  
+it is available from the AuthorizationContext object passed in at runtime. The callback 
+methods return an empty List of user principals and do not affect the PermissionSet passed 
+into the <code>doFinal(PermissionSet perms)</code> method.<p>
+
+It is more likely that Policy subclasses will be created for top-level container objects
+for an application. These subclasses tend to be coarse-grained, key domain objects that may contain
+many different types of child objects.<p>
+
+<h3><a name="PolicyStore">com.hippikon.security.PolicyStore</h3></a>
+
+The PolicyStore abstract class provides an abstraction of a set of entries mapping
+principal permissions to a ProtectedResource. It also defines the legal combinations
+or ProtectedResource object hierarchy for a application.<p>
+
+Each product must provide its own PolicyStore. The PolicyStore should be created by application 
+developers who know about each ProtectedResource and the business rules of the 
+application. The authorization framework currently supports an XML-based policy store
+definition. Each application must provide an XML file that contains permission rules
+named:<p>
+
+<pre>
+hippikon.product-id.[productID].policy-store.xml
+</pre><p>
+
+where [productID] is the unique identifier assigned to each product by the developer. If a single application
+is being created, a productID of "1" will suffice. The XML policy file must be located on the system CLASSPATH for it to be 
+loaded and parsed at runtime.<p>
+
+Each permission set is represented in XML by using UNIX-style descriptions. Letters or 
+dashes can be combined for each principal entry. See the DefaultPermissionSet API
+for a complete list of available permission flags.<p>
+
+An entry for an Document with a user principal of <i>the-editor</i> granted read and write permissions
+would look like:<p>
+
+<pre>
+&lt;protected-resource name="Document">
+    &lt;principal type="user" name="the-editor" acl="-rw--"/>
+&lt;/protected-resource>
+</pre><p>
+
+Permissions may be nested to any depth, and permissions inheritance 
+avoids duplication and provide fine-grained permissions definitions. If 
+a child object is added to the Document named <i>Note</i> and add a permission of read 
+is added for users in a manager role, the XML entry looks like:<p>
+
+<pre>
+&lt;protected-resource name="Document">
+    &lt;principal type="user" name="the-editor" acl="-rw---"/>
+    &lt;protected-resource name="Note">
+        &lt;principal type="role" name="manager" acl="-r---"/>
+        &lt;principal type="user" name="the-editor" acl="ir---"/>
+    &lt;protected-resource>
+&lt;/protected-resource>
+</pre><p>
+
+In this example, all users who are assigned a role of <i>manager</i> can read notes contained within
+all Document objects, but they can not read the Document itself. The user that is <i>the-editor</i> 
+(when the Policy callback methods are invoked) is the only person who can create new instances
+of a Note attached to an Document.<p>
+
+Until a permission is explicitly defined in XML for a ProtectedResource, either an empty 
+PermissionSet is returned or an IllegalAuthorizationExceptio is thrown, depending
+on the AuthorizationContext.<p>
+
+Permissions may also be overridden further down in an object hierarchy:<p>
+
+<pre>
+&lt;protected-resource name="Document">
+    &lt;principal type="user" name="the-editor" acl="-rw---"/>
+    &lt;principal type="role" name="manager" acl="-r----"/>
+    &lt;protected-resource name="Note">
+        &lt;principal type="role" name="manager" acl="-----"/>
+        &lt;principal type="user" name="the-editor" acl="ir---"/>
+    &lt;protected-resource>
+&lt;/protected-resource>
+</pre><p>
+
+In the above example, the role of manager is granted read access to Document objects, but not
+all permissions are disabled for child notes.<p>
+
+Child objects may also inherit the permissions of their parents:<p>
+
+<pre>
+&lt;protected-resource name="Document">
+    &lt;principal type="user" name="the-editor" acl="-rw---"/>
+    &lt;protected-resource name="Note">
+    &lt;protected-resource>
+&lt;/protected-resource>
+</pre><p>
+
+In this example, the note has the same permissions defined as the Document parent.
+
+Most of the work in defining a nested data structure and principal lookup is 
+provided by a package visible class <code>com.hippikon.security.DefaultPolicyStore</code>. This
+class provides one load method that may be overridden by subclasses in order to 
+populate the data structure from a persistant store.<p>
+
+The <code>com.hippikon.security.XMLPolicyStore</code> class is the default implementation for 
+the current version, although it is completely hidden from clients. This allows the 
+underlying store mechanism to be changed with no impact.<p>
+
+<!------------------------------------------------------------------------>
+
+<h3><a name="SDKExamples">SDK Examples</h3></a>
+
+<h2><a name="PolicyImpl">Implementing specialized Policy classes</h2></a>
+
+To plug Policy implementations into the framework, developers must
+follow these steps:<p>
+
+<ol>
+<li>Extend ProtectedResource and implement <code>getResourceName()</code> to return a 
+descriptive name for the resource. This name may be the classname of the business interface
+it implements. Document the return value in the javadoc comments
+<li>Map the return value of <code>getResourceName</code> to an entry in a PolicyStore
+<li>Define role and user principal permissions in the PolicyStore
+<li>Create a Policy subclass if required
+<li>Map the Policy subclass to the ProtectedResource in the resource.policies file
+<li>Provide a constructor that matches that of the Policy class. This constructor will narrow-cast
+the ProtectedResource object passed in by the framework to the specific type
+<li>Implement the callback methods as needed
+</ol>
+
+<b>Example</b>
+
+<pre>
+package com.hippikon.security.test;
+
+import java.util.*;
+import com.hippikon.security.*;
+
+/**
+ * A default implementation of an Policy for an Document
+ */
+public class DocumentPolicy extends DefaultObjectPolicy {
+
+    private Document doc;
+
+    /**
+     * All Policy subclasses must provide a constructor with this signature. 
+     */
+    public DocumentPolicy(ProtectedResource res, AuthorizationContext ctx)
+    throws IllegalAuthorizationException {
+
+        // must call the super constructor
+        //
+        super(res, ctx);
+
+        // narrow-cast the ProtectedResource to the type we expect
+        //
+        this.doc = (Document)res;
+    }
+
+    /**
+     * Determines if the user specified in the AuthorizationContext 
+     * is either 'the-editor' or 'the-author', 'the-reviewer', 
+     * or 'the-manager'
+     */
+    protected List determineUserPrincipals() {
+
+        List list = new ArrayList();
+
+        if (ctx.getUserGUID().equals(doc.getManagerGUID())) {
+            list.add("the-manager");
+        } else
+        if (ctx.getUserGUID().equals(doc.getEditorUserGUID())) {
+           list.add("the-editor");
+        } else
+        if (ctx.getUserGUID().equals(doc.getAuthorGUID())) {
+           list.add("the-author");
+        } else
+        if (ctx.getUserGUID().equals(doc.getReviewerGUID()) {
+           list.add("the-reviewer");
+        }
+        return list;
+    }
+
+    /**
+     * Turns off write, control and delete if this isn't the latest version
+     */
+    protected PermissionSet doFinal(PermissionSet perms) {
+
+        MutablePermissionSet mps = createMutablePermissionSet(perms); 
+
+        if (!doc.isLatestVersion()) {
+            mps.setReadOnly();
+        }
+
+        return mps;
+    }
+}
+</pre><p>
+
+<h2><a name="#PolicyFile">The resource.policies file</h2></a>
+
+To invoke a Policy for a ProtectedResource, a binding must be made in 
+the resource.policies file for each application. This file must follow the 
+standard Java Properties file format and be located on the system CLASSPATH.<p>
+
+The file must be named similarly to the XML policy store file:<p>
+
+<pre>
+hippikon.product-id.[product-id].resource.policies
+</pre><p>
+
+and contain entries that maps the return values of <code>getResourceName()</code>
+to Policy classnames. An example entry for a Document ProtectedResource that maps to 
+<code>com.yourDomain.security.DocumentPolicy</code> looks like:<p>
+
+<pre>
+# map the DocumentPolicy to Document
+#
+Document.policy.classname = com.yourDomain.security.DocumentPolicy
+</pre><p>
+
+If no binding is provided, the <code>com.hippikon.security.DefaultObjectPolicy</code> class
+is invoked. This class provides an out-of-the-box, working framework (Ref: The Selfish Class)
+that does not break an application if a developer forgets to include the resource file.<p>
+
+<h2><a name="ExtensionsCache">Policy Store Extensions Cache</h2></a>
+
+To avoid the need to parse XML policy stores for each authorization request, the authorization
+framework implements a simple cache to store the policy store data structure in memory.<p>
+
+The default cache interval is 6 hours, although this may be altered by setting a system environment
+variable. The value must be defined in milliseconds:<p>
+
+<pre>
+policy-store-factory.cache-flush.interval=3000
+</pre><p>
+
+The example above causes the cache to be flushed every 3 seconds. Care must be taken not to 
+allow a setting as short of this in a production environment. The cache flush property
+can be set as an environment variable.
+
+<h2><a name="PermissionsNavigator">Permissions Navigator GUI</h2></a>
+
+Creating complex authorization rules for an extensive object hierachy that contains
+many principals can be tedious for developers and difficult for test engineers and
+product managers to read. Understanding the authorization rules in any system can be
+difficult enough, but with a complex system combinatorics can explode.<p>
+
+To assit developers, testers and requirements specification writers Hippikon provides
+a user interface that provides a convenient display format for XML Policy Store files. With
+Hippikon 3.3 the interface provides XML Policy Store authoring functionality.
+
+Since the target audience for the Permissions Navigator is developers and testers, ANT is
+the platform dependent method to launch the GUI. Writing a wrapper script to launch GUI
+is trivial. The main() method is included in the file <code>com.hippikon.security.PermsNavigator</code>.<p>
+
+To launch the GUI, cd to the directory where you extracted the hippikon download and at a command prompt
+type:
+
+<pre>
+cd [path to hippikon directory]
+ant run-gui
+</pre>
+
+The following screen shots are of the Permissions Navigator running using the default
+Metal Look and Feel on a WinXP machine running JDK 1.5.<p>
+
+<a name="ViewingFiles"><h2>Viewing XML Policy Store Files</h2></a>
+
+The Permissions Navigator provides a convenient view of an XML Policy Store
+file in the form of a tree and a custom spreadsheet. The tree on the left side
+of the user interface represnts the valid paths of protected resource within an
+application. The top-most node of the tree represents the host application itself.<p>
+
+The spreadsheet view on the left displays the principals and permissions defined
+for the selected protected resource node on the right. The view represents the 
+exact same permissions that would be calculated by the Hippikon framework (although
+run-time Policy callback classes are not invoked).<p>
+
+The graphical view provides a convenient means for testers to find out what
+permissions are defined for a set of objects, and for developers to check their
+implementation against requirements. It may also allow Product Managers or 
+Professional Services employees to 'configure' an application for a customer without
+needing development input. The possibilities are widespread, especially for enterprise
+software where highly customized software is the accepted norm.<p>
+
+<img src="images/complex-permissions.gif"><p>
+
+<a name="CreateFiles"><h2>Creating XML Policy Store Files</h2></a>
+
+The first step in creating a new XML Policy Store file is to create a new 
+document by choosing File->New Policy Store or clicking on the Blank Document
+icon on the toolbar.<p>
+
+<img src="images/blank-screen.gif"><p>
+
+You can then start by adding nodes to build up the object hierachy. Each node in the tree displayed
+on the left hand side represents a valid resource path in the target application.<p>
+
+<img src="images/add-node.gif"><p>
+
+Once nodes have been added they can be renamed by right-clicking on the node and choosing 'Rename Node'
+or by simply clicking once on the node name.<p>
+
+<img src="images/added-nodes.gif"><p>
+
+Once the nodes have been added the principals can be defined. Note that principals may not be
+added to the top most node, which represents the host application container for all proteced resource
+objects. The GUI will not allow principals to be added to the top node to avoid confusion. To add a principal
+just double-click in the Permissions table display on the right and type the principal name. Duplicate names
+are not allowed on the same node.<p>
+
+<img src="images/adding-principal.gif"><p>
+
+Once principals have been added permissions can be assigned by checking the appropriate checkbox in the
+I, R, W, C or D columns in the right hand table. It should be noted that if a principal has a checkbox
+left unchecked that permission is set to '-' meaning the permission is denied rather than undefined.<p>
+
+<img src="images/complex-permissions.gif"><p>
+
+If you define a set of principals and permissions for a node that has child nodes, those defined principals
+and permissions will be inherited by the child nodes further down the tree. In this way you can define
+principals easily, but also override the rules further down the tree. For instance, if the principal 
+'manager' was given create, read, write, control and delete permissions to the node 'Book', the nodes
+'Draft', 'Note', 'Attachment' and 'Task' would all inhert the same set of permissions. However, if you
+needed to set the permissions for the 'Note' child node for the manager to read-only you could do so 
+by simply clicking on the 'Note' child node of 'Book' and uncheck create, write, control and delete checkboxes
+for the manager principal. In this way very complex rules can quickly be created for an application.<p>
+
+Once the rules have been defined choose File->Save As or click the floppy disk icon on the toolbar
+to save your file to disk. The GUI will convert the tree and table structure to a valid XML document
+that can be used within the hippikon framework. To verify your file you can load it back into 
+the GUI by choosing File->Load Policy Store or clicking the folder icon on the toolbar.
+
+</div>
+</body>
+</html>

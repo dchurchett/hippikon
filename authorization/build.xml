@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+
+<!--
+ - Part of the Hippikon API, a powerful authoriation
+ - security framework for Java applications.
+ -
+ - Copyright (C) 2005  Dale Churchett
+ -
+ - This library is free software; you can redistribute it and/or
+ - modify it under the terms of the GNU Lesser General Public
+ - License as published by the Free Software Foundation; either
+ - version 2.1 of the License, or (at your option) any later version.
+
+ - This library is distributed in the hope that it will be useful,
+ - but WITHOUT ANY WARRANTY; without even the implied warranty of
+ - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ - Lesser General Public License for more details.
+
+ - You should have received a copy of the GNU Lesser General Public
+ - License along with this library; if not, write to the Free Software
+ - Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ -
+ - Contact: Dale Churchett <dale@hippikon.com>
+ - Website: http://www.hippikon.com, http://www.hippikon.org
+ -
+-->
+
+<!-- Written to assume that classpath is rooted in the current directory. -->
+<!-- So this should be OK if you make this script in the root of a filesystem. -->
+<!-- If not, you may prefer to adjust the basedir, or move some directories around. -->
+<!-- The idea is that both Ant and NetBeans have to know what the package root is -->
+<!-- for the classes in your application. -->
+
+<project name="Hippikon" basedir="." default="all">
+
+    <target name="init">
+        <!-- You can set up any variables you want used throughout the script here. -->
+        <property name="log4j" value="lib/log4j-1.2.9.jar"/>
+        <property name="junit" value="lib/junit-4.9.jar"/>
+    	<property name="spring-core" value="lib/spring-core-3.1.1.RELEASE.jar"/>
+        <property name="ant-junit" value="lib/optional.jar"/>
+        <!-- setup the property to write unit test reports to -->
+        <property name="test.reports" value="./reports"/> 
+        <property name="hippikon.jar.file" value="lib/hippikon.jar"/>  
+    </target>
+
+    <target name="compile" depends="init" description="Compile the source code">
+        <!-- Both srcdir and destdir should be package roots. -->
+        <!-- They could be different of course; in that case NetBeans can also be set -->
+        <!-- up to compile to a different filesystem in the same way; see Compiler Types: -->
+        <javac srcdir="./src/java-src" destdir="." debug="true" deprecation="true">
+            <!-- To add something to the classpath: -->
+            <classpath>
+                <pathelement location="${log4j}"/>
+                <pathelement location="${junit}"/>
+            	<pathelement location="${spring-core}"/>
+            </classpath>
+        </javac>
+    </target>
+
+
+    <!-- 
+      - Runs the permissions navigator Swing application for viewning XML policy files 
+     --> 
+    <target name="run-gui" depends="clean, jar" description="Run the Permissions Navigator UI Tool">
+       <java classname="com.hippikon.security.PermsNavigator" fork="true" classpath="${hippikon.jar.file}:${log4j}"/>
+    </target>
+    
+    <!-- compile the unit tests -->
+    <target name="test-compile" depends="compile" description="Compile the unit test code">
+        <javac srcdir="./src/test-src" destdir="." debug="true" deprecation="true">
+            <!-- To add something to the classpath: -->
+            <classpath>
+                <pathelement location="${log4j}"/>
+                <pathelement location="${junit}"/>
+            	<pathelement location="${spring-core}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <!-- Create the actual jar file -->
+    <target name="jar" depends="init,compile" description="Create the JAR file for distribution">
+        <jar jarfile="${hippikon.jar.file}" compress="true" basedir=".">
+            <include name="**/*.class"/>
+            <include name="**/*.gif"/>
+            <exclude name="**/*.java"/>
+            <exclude name="**/*.form"/>
+            <exclude name="*.mf"/>
+            <exclude name="*.jar"/>
+            <exclude name="docs"/>
+            <exclude name="**/test/**"/>
+        </jar>
+    </target>
+
+    <target name="all" depends="clean,init,test-compile,jar" description="Build everything.">
+        <echo message="Application built. Well done!"/>
+    </target>
+    
+    <!-- setup the test classpath -->
+    <path id="test.classpath">
+        <pathelement location="."/>
+        <pathelement location="./src/test-src"/>
+        <pathelement location="./src/java-src"/>
+        <pathelement location="./src/test-src/config"/>
+        <pathelement location="${log4j}"/>
+        <pathelement location="${junit}"/>
+        <pathelement location="${ant-junit}"/>
+        <fileset dir="./lib">
+            <include name="**.*.jar"/>
+        </fileset>
+    </path>  
+    
+    <!-- setup the junit test calls -->
+    <target name="test" depends="clean,init,all" description="Run JUnit tests">
+        <mkdir dir="${test.reports}"/>
+        <junit fork="yes" printsummary="yes" haltonfailure="no">
+            <batchtest fork="yes" todir="${test.reports}" >
+                <fileset dir="src/test-src">
+                    <include name="**/*Test.java" />
+                </fileset>
+            </batchtest>
+            <formatter type="xml"/>
+            <classpath refid="test.classpath"/>
+            <jvmarg value="-Dlog4j.configuration=./config/log4j.conf"/>
+        </junit>
+        <junitreport todir="${test.reports}">
+            <fileset dir="${test.reports}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${test.reports}"/>
+        </junitreport>
+        <echo message="HTML Unit Test Report created under: ${test.reports}"/>
+    </target>
+
+
+    <!-- clean everything -->
+    <target name="clean" depends="init" description="Clean all build artifacts.">
+        <delete>
+            <fileset dir=".">
+                <include name="**/*.class"/>
+            </fileset>
+        </delete>
+        <delete file="${hippikon.jar.file}"/>
+        <delete dir="docs"/>
+        <delete dir="${test.reports}"/>
+    </target>
+    
+    <!-- create the javadoc API HTML files -->
+    <target name="javadoc" description="Generate javadoc HTML">
+        <delete dir="docs"/>
+        <javadoc sourcepath="src/java-src" destdir="docs" overview="src/java-src/overview.html"
+                 windowtitle="Hippikon - A Powerful Authorization API">
+            <fileset dir="./src/java-src">
+                <include name="**/*.java"/>
+            </fileset>
+        </javadoc>
+    </target>
+    
+    <!--
+      - CHANGE THE NAME OF THE VERSION HERE
+      -->
+    <property name="download-bundle" value="hippikon-4.0"/>
+    <target name="create-bundle" depends="test,javadoc" description="Create the downloadable bundle">
+    <!--
+      - make a hippikon-## directory
+      - make a lib directory
+      - copy over the lib directory contents
+      - copy over the license file
+      - copy over the readme file
+      - copy over the build script
+      - copy over the PDF manual (identical to the webpage)
+      - copy over the javadocs
+      - copy over the src
+      - create a tar.gz file 
+      - create a zip file
+      - and clean up artifacts from the tar operation
+      -->
+        <delete dir="${download-bundle}"/>
+        <mkdir dir="${download-bundle}"/>
+        <copy todir="${download-bundle}/lib">
+            <fileset dir="lib">
+                <include name="*.jar"/>
+            </fileset>
+        </copy>
+        <copy file="license.txt" todir="${download-bundle}"/>
+        <copy file="README.txt" todir="${download-bundle}"/>
+        <copy file="build.xml" todir="${download-bundle}"/>
+        <copy file="Hippikon_Manual.pdf" todir="${download-bundle}"/>
+        <copy todir="${download-bundle}/javadoc">
+            <fileset dir="docs"/>
+        </copy>
+        <copy todir="${download-bundle}/src">
+            <fileset dir="src"/>
+        </copy>
+        
+        <tar tarfile="${download-bundle}.tar" basedir="${download-bundle}"/>
+        <gzip zipfile="${download-bundle}.tar.gz" src="${download-bundle}.tar"/>
+        <zip destfile="${download-bundle}.zip" basedir="${download-bundle}"/>
+        <delete file="${download-bundle}.tar"/>
+        <delete dir="${download-bundle}"/>
+    </target>
+
+
+</project>
