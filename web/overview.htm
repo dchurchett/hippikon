@@ -17,8 +17,6 @@ Open Source Authorization API for Java Applications</h2>
 <a class="sidebar" href="documentation.htm">Manual</a><br>
 <a class="sidebar" href="docs/index.html">Javadocs</a><br>
 <a class="sidebar" href="http://sourceforge.net/tracker/?group_id=139356&atid=743293">Bug Reports</a><br>
-<a class="sidebar" href="http://www.hippikon.com/forum">User Forum</a><br>
-<a class="sidebar" href="http://www.hippikon.com/blog/index.php">Blog</a>
 </div>
 
 <div class="sflogo">
@@ -46,7 +44,7 @@ For full details on each interface, refer to the <a href="docs">Javadocs</a>, ho
 use of Hippikon is for an <code>AuthorizationContext</code> to be created once a user entering
 an application has been authenticated, and then use that context object to obtain
 <code>PermissionSet</code> objects via the <code>PermissionsFactory</code> based on one or
-more <code>ProtectedResource</code> subclasses. Once the permission set has been obtained it
+more <code>ProtectedResource</code> annotated classes. Once the permission set has been obtained it
 can be used to check for CREATE, READ, WRITE, CONTROL or DELETE flags in order to allow
 the user to perform actions on the object itself.<p>
 
@@ -111,9 +109,9 @@ entry in the XML policy store file for product "1". The entry looks like:<p>
 which gives anyone in the role of manager read permission to the ManagerBookList view helper object, but read, control and 
 delete permissions to the specific manager that has been assigned the book list. In the ManagerBookList view helper, delete
 permissions could mean that a book is removed from their list and control means a book is assigned to a different manager. The
-semantics of each permission is for the developer to decide, but typically instansiate means 'to create new instances', 
+semantics of each permission is for the developer to decide, but typically instantiate means 'to create new instances', 
 read means 'to read', write means 'to write or edit', control means 'to affect an internal state change', 
-delete means 'to delete'. The meaning of each permission is fairly straightfoward, with control being the only one
+delete means 'to delete'. The meaning of each permission is fairly straight-forward, with control being the only one
 that provides some flexibility in interpretation. Even with a very complex model, the 5 permissions defined by
 Hippikon are all that is needed.<p>
 
@@ -158,7 +156,7 @@ public class ManagerBookListPolicy extends DefaultObjectPolicy {
 	// provide this constructor then downcast our ProtectedResource
 	// to the type of object we expect in this callback class
 	//
-	public ManagerBookListPolicy(ProtectedResource res, AuthorizationContext ctx)
+	public ManagerBookListPolicy(Object res, AuthorizationContext ctx)
 	throws IllegalAuthorizationException {
 		super(res, ctx);
 		this.list = (ManagerBookList)res;
@@ -204,7 +202,7 @@ the permissions for the view helper:
 
 <ul>
 <li>Create an AuthenticationContext object and make it available through a FrontController
-<li>Extend ProtectedResource to make sure our view helper was protected by Hippikon
+<li>Use the ProtectedResource Annotation to make sure our view helper was protected by Hippikon
 <li>Add the permission rules for the view helper to the XML policy file
 <li>Create a small callback class
 <li>Add the class to the resource.policies file

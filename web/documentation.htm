@@ -18,8 +18,6 @@ Open Source Authorization API for Java Applications</h2>
 <a class="sidebar" href="documentation.htm">Manual</a><br>
 <a class="sidebar" href="docs/index.html">Javadocs</a><br>
 <a class="sidebar" href="http://sourceforge.net/tracker/?group_id=139356&atid=743293">Bug Reports</a><br>
-<a class="sidebar" href="http://www.hippikon.com/forum">User Forum</a><br>
-<a class="sidebar" href="http://www.hippikon.com/blog/index.php">Blog</a>
 </div>
 
 <div class="sflogo">
@@ -213,39 +211,34 @@ user data in an encrypted cookie that is valid for the user's session.<p>
 <h3><a name="ProtectedResource">com.hippikon.security.ProtectedResource</h3></a>
 
 Any object within an application that needs protection by the 
-authorization framework must extend from <code>com.hippikon.security.ProtectedResource</code>.<p>
+authorization framework must define the <code>com.hippikon.security.ProtectedResource</code> annotation.<p>
 
-The ProtectedResource abstract class defines a single method:<p>
+The ProtectedResource annotation interface defines a single attribute:<p>
 
 <code>
-public static String getResourceName() throws ProtectedResourceNamingException
+name()
 </code><p>
 
 
-Subclasses must override this method as the default implementation throws an
-automatic exception if invoked. The return value of this method should describe
-the class of ProtectedResource that can be used as a key in a PolicyStore 
-implementation.<p>
-
-The return value is also used to bind Policy implementations to ProtectedResource
-classes at deployment. Because developers of future applications need to know the return 
-value of this method explicitly so <b>this should be reflected in the javadoc 
-documentation</b>.<p>
+The return value of this attribute should describe the type of ProtectedResource 
+being protected, and is used as a key in a PolicyStore implementation. The name value is also 
+used to bind Policy implementations to ProtectedResource
+classes at deployment. <p>
 
 Developers are advised not to return the classname using 
-<code>this.getClass().getName()</code> because many objects may be developed
-that need the same protected. For instance, a business object named RFQ may
+as the annotated name attribute because many objects may be developed
+that need the same protection logic. For instance, a business object named RFQ may
 provide objects such as SummaryRFQBean, DetailedRFQBean or RFQBean for
-efficiency in a J2EE application (see the Value Object design pattern). Each 
-of these objects should be considered an RFQ and have the same permissions.<p>
+efficiency in a application (see the Value Object design pattern). Each 
+of these objects should be considered an RFQ and have the same permissions logic.<p>
 
 To avoid the need to create multiple or duplicate entries in a PolicyStore each business object 
-should implement <code>getResourceName()</code> to return the same value or, preferably, extend
-from a class that itself extends ProtectedResource. Each class would then inherit the 
-same return value from its superclass.<p>
+should define the annotation name attribute to return the same value or, preferably, extend
+from a class that itself defines the annotation value. Each class would then inherit the 
+same return value from the annotated value on its superclass.<p>
 
 The permissions of a ProtectedResource may differ from each entry depending on the 
-object hierachy of an application. For example, an RFQ may be defined as a parent 
+object hierarchy of an application. For example, an RFQ may be defined as a parent 
 object or a child object. In the latter case, the permissions may be affected 
 by the parent.<p>
 
@@ -293,9 +286,6 @@ are presented as part of the view. The PermissionSet returned from the Permissio
 may also have the WRITE permission disabled through a specialized Policy subclass that is 
 bound to the RFQ object through the <a href="#PolicyFile">resource.policies</a> file.<p>
 
-In general, it is dangerous for an application developer to rely on the PermissionSet 
-to determine a UI view, as there can be many reasons why a permission could be disabled.<p>
-
 <h3><a name="PermissionsFactory">com.hippikon.security.PermissionsFactory</h3></a>
 
 The PermissionsFactory class provides five methods that clients use to obtain
@@ -318,8 +308,8 @@ the PolicyStore and ensure all other developers know the legal combinations of o
 classes.<p>
 
 When a client needs to obtain a PermissionSet for an object defined as a child of one or
-more parents, the methods that take a List of ProtectedResources should be used. When 
-the client needs to check permissions for a class of ProtectedResource (to determine whether
+more parents, the methods that take a List of Objects should be used. When 
+the client needs to check permissions for the ProtectedResource annotation (to determine whether
 new instances may be created for example), the methods that take a Class as an argument
 should be used.<p>
 
@@ -329,10 +319,10 @@ utility methods:<p>
 
 <code>
 public static PermissionSet<br>
-getPermissions(ProtectedResource res, AuthorizationContext ctx)<p>
+getPermissions(Object res, AuthorizationContext ctx)<p>
 
 public static PermissionSet<br>
-getPermissions(ProtectedResource res, Class c, AuthorizationContext ctx)<p>
+getPermissions(Object res, Class c, AuthorizationContext ctx)<p>
 
 public static PermissionSet<br>
 getPermissions(Class c, AuthorizationContext ctx)<p>
@@ -396,7 +386,7 @@ paradigm because it breaks a cardinal rule of keeping related data and behaviour
 object provide its own interface to accomplish one set of coheseive tasks, but authorization logic is now included
 within it, and authorization logic is littered across the application code. Another option would be to use
 Aspect Oriented Programming techniques, but this would add yet another layer of complexity. The only coupling we
-have with Hippikon is through the ProtectedResource class, which passes OO-type questions such as 
+have with Hippikon is through the ProtectedResource annotation, which passes OO-type questions such as 
 'Is an BusinessDocument a ProtectedResource?'
 
 The callback methods allow user principals to be determined at runtime on a 
@@ -447,7 +437,7 @@ DocumentPolicy could turn off write, control and delete permissions
 if the Document object it protects was an immutable version.<p>
 
 The List of ProtectedResource names are made available to Policy subclasses by way of 
-the <code>getResourcePathInContext()</code> method, which may be examined in the 
+the <code>name()</code> annotation attribute, which may be examined in the 
 <code>doFinal(PermissionSet perms)</code> method should authorization logic
 needs to be implemented that depends on the object hierachy being accessed.<p>
 
@@ -569,15 +559,15 @@ To plug Policy implementations into the framework, developers must
 follow these steps:<p>
 
 <ol>
-<li>Extend ProtectedResource and implement <code>getResourceName()</code> to return a 
-descriptive name for the resource. This name may be the classname of the business interface
-it implements. Document the return value in the javadoc comments
-<li>Map the return value of <code>getResourceName</code> to an entry in a PolicyStore
+<li>Use the ProtectedResource annotation and define the <code>name()</code> attribute to return a 
+descriptive name for the resource. Document the return value in the javadoc comments.
+<li>Provide a default public no-arg constructor
+<li>Map the return value of the <code>name()</code> annotated attribute to an entry in a PolicyStore
 <li>Define role and user principal permissions in the PolicyStore
 <li>Create a Policy subclass if required
-<li>Map the Policy subclass to the ProtectedResource in the resource.policies file
+<li>Map the Policy subclass to the ProtectedResource name() in the resource.policies file
 <li>Provide a constructor that matches that of the Policy class. This constructor will narrow-cast
-the ProtectedResource object passed in by the framework to the specific type
+the object passed in by the framework to the specific type
 <li>Implement the callback methods as needed
 </ol>
 
@@ -599,7 +589,7 @@ public class DocumentPolicy extends DefaultObjectPolicy {
     /**
      * All Policy subclasses must provide a constructor with this signature. 
      */
-    public DocumentPolicy(ProtectedResource res, AuthorizationContext ctx)
+    public DocumentPolicy(Object res, AuthorizationContext ctx)
     throws IllegalAuthorizationException {
 
         // must call the super constructor
@@ -663,7 +653,7 @@ The file must be named similarly to the XML policy store file:<p>
 hippikon.product-id.[product-id].resource.policies
 </pre><p>
 
-and contain entries that maps the return values of <code>getResourceName()</code>
+and contain entries that maps the return values of the <code>name()</code> attribute
 to Policy classnames. An example entry for a Document ProtectedResource that maps to 
 <code>com.yourDomain.security.DocumentPolicy</code> looks like:<p>
 
