@@ -48,7 +48,7 @@
         <!-- Both srcdir and destdir should be package roots. -->
         <!-- They could be different of course; in that case NetBeans can also be set -->
         <!-- up to compile to a different filesystem in the same way; see Compiler Types: -->
-        <javac srcdir="./src/java-src" destdir="." debug="true" deprecation="true">
+        <javac srcdir="./src/main/java" destdir="." debug="true" deprecation="true">
             <!-- To add something to the classpath: -->
             <classpath>
                 <pathelement location="${log4j}"/>
@@ -68,7 +68,7 @@
     
     <!-- compile the unit tests -->
     <target name="test-compile" depends="compile" description="Compile the unit test code">
-        <javac srcdir="./src/test-src" destdir="." debug="true" deprecation="true">
+        <javac srcdir="./src/test/java" destdir="." debug="true" deprecation="true">
             <!-- To add something to the classpath: -->
             <classpath>
                 <pathelement location="${log4j}"/>
@@ -99,9 +99,9 @@
     <!-- setup the test classpath -->
     <path id="test.classpath">
         <pathelement location="."/>
-        <pathelement location="./src/test-src"/>
-        <pathelement location="./src/java-src"/>
-        <pathelement location="./src/test-src/config"/>
+        <pathelement location="./src/test/java"/>
+        <pathelement location="./src/main/java"/>
+        <pathelement location="./src/test/resources"/>
         <pathelement location="${log4j}"/>
         <pathelement location="${junit}"/>
         <pathelement location="${ant-junit}"/>
@@ -115,7 +115,7 @@
         <mkdir dir="${test.reports}"/>
         <junit fork="yes" printsummary="yes" haltonfailure="no">
             <batchtest fork="yes" todir="${test.reports}" >
-                <fileset dir="src/test-src">
+                <fileset dir="src/test/java">
                     <include name="**/*Test.java" />
                 </fileset>
             </batchtest>
@@ -148,9 +148,9 @@
     <!-- create the javadoc API HTML files -->
     <target name="javadoc" description="Generate javadoc HTML">
         <delete dir="docs"/>
-        <javadoc sourcepath="src/java-src" destdir="docs" overview="src/java-src/overview.html"
+        <javadoc sourcepath="src/main/java" destdir="docs" overview="src/java-src/overview.html"
                  windowtitle="Hippikon - A Powerful Authorization API">
-            <fileset dir="./src/java-src">
+            <fileset dir="./src/main/java">
                 <include name="**/*.java"/>
             </fileset>
         </javadoc>
