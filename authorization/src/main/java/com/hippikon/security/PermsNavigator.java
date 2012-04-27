@@ -38,7 +38,6 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -112,11 +111,13 @@ public class PermsNavigator extends JFrame {
 	private static final String NL = System.getProperty("line.separator");
 	private PolicyStore store = null;
 	private Map<String, ResourceAclList> topResAcls = null;
+	@SuppressWarnings("unused")
 	private Document xmlDoc;
 	private DefaultTreeModel treeModel;
 	private DefaultMutableTreeNode top = null;
 	private JTable table = null;
 	private ResourceAclList currentResAcl;
+	@SuppressWarnings("unused")
 	private File currentFile = null;
 	private JButton saveBtn;
      
@@ -209,7 +210,8 @@ public class PermsNavigator extends JFrame {
          popup.add(renameNode);
          renameNode.addActionListener(new ActionListener() {
              public void actionPerformed(ActionEvent e) {
-                 DefaultMutableTreeNode node = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
+                 @SuppressWarnings("unused")
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
                  tree.startEditingAtPath(tree.getSelectionPath());
              }
          });
@@ -626,39 +628,7 @@ public class PermsNavigator extends JFrame {
              return ext;
          }
      }
- 
-     // obtain all unique principals defined in the XML file
-     // we pass this Comparator to the TreeMap that displays
-     // the principals for an object hierachy so that each time
-     // the user clicks on a ProtectedResource node the principals
-     // are always listed in the same order
-     //
-     private class PrincipalSorter implements Comparator {
-         private java.util.List defaultOrder = store.getDefinedPrincipals();
-         PrincipalSorter() { }
- 
-         public int compare(Object o1, Object o2) {
-             int idx1 = defaultOrder.indexOf(o1);
-             int idx2 = defaultOrder.indexOf(o2);
-             if (idx1 < 0 && idx2 < 0) {
-                 return ((String)o1).compareTo((String)o2);
-             } else if (idx1 < 0) {
-                 return 1;
-             } else if (idx2 < 0) {
-                 return -1;
-             } else if (idx1 < idx2) {
-                 return -1;
-             } else if (idx2 < idx1) {
-                 return 1;
-             }
-             return 0;
-         }
- 
-         public boolean equals(Object o1, Object o2) {
-             return (compare(o1, o2) == 0);
-         }
-     }
-     
+      
    
     // handles pop-up menu events for the JTree
     //
@@ -677,7 +647,8 @@ public class PermsNavigator extends JFrame {
                 }
                 if (store == null) 
                     return;
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
+                @SuppressWarnings("unused")
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
                 popup.show(tree, e.getX(), e.getY());
             }
         }
@@ -700,7 +671,8 @@ public class PermsNavigator extends JFrame {
     // this method will completely wipe out the existing userObject
     // and create the 'truth'
     //
-    private void buildResourceAcls() {
+    @SuppressWarnings("unchecked")
+	private void buildResourceAcls() {
         PermissionsTableModel model = (PermissionsTableModel)table.getModel();
         TreePath path = tree.getSelectionPath();
         if (path == null) 
@@ -788,7 +760,8 @@ public class PermsNavigator extends JFrame {
     //
     class PermissionsTableModel extends DefaultTableModel {
         
-        private String[] columnNames;
+		private static final long serialVersionUID = -1679683041236695622L;
+		private String[] columnNames;
         private Object[][] data;
         private int cols;
         
@@ -835,7 +808,7 @@ public class PermsNavigator extends JFrame {
          * then the last column would contain text ("true"/"false"),
          * rather than a check box.
          */
-        public Class getColumnClass(int c) {
+        public Class<?> getColumnClass(int c) {
             return getValueAt(0, c).getClass();
         }
 
@@ -890,7 +863,7 @@ public class PermsNavigator extends JFrame {
         // returns the objects in a specific row of the table model
         // that will be a String [principal], i, r, w, c, d values
         //
-        private java.util.List getRow(int rowNum) {
+        private java.util.List<Object> getRow(int rowNum) {
             java.util.List<Object> list = new ArrayList<Object>();
             for (int i = 0; i < getColumnCount(); i++) {
                 Object o = data[rowNum][i];
@@ -936,7 +909,10 @@ public class PermsNavigator extends JFrame {
     // creates a new policy store on disk
     //
     private class CreateAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
+
+		private static final long serialVersionUID = 7748875904554640642L;
+
+		public void actionPerformed(ActionEvent e) {
 
             if (top != null) {
                 // warn the user that they will overwrite what they have just created
@@ -967,7 +943,8 @@ public class PermsNavigator extends JFrame {
                     // load it back up
                     //
                     JTreeXMLTransformer transformer = new JTreeXMLTransformer(file, new DefaultMutableTreeNode("Default Application"));
-                    Document document = transformer.initDocument();
+                    @SuppressWarnings("unused")
+					Document document = transformer.initDocument();
                     transformer.saveToFile();
                     createNodes(file);
                 } catch (Exception e1) {
@@ -985,7 +962,10 @@ public class PermsNavigator extends JFrame {
     // Action to handle saving the TreeModel out to XML
     //
     private class SaveAction extends AbstractAction {
-         public void actionPerformed(ActionEvent e) {
+
+		private static final long serialVersionUID = -8470543469088428756L;
+
+		public void actionPerformed(ActionEvent e) {
              try {
                 // prompt user for a place to write the new file
                 //
@@ -1011,7 +991,10 @@ public class PermsNavigator extends JFrame {
     // Action to handle loading XML policy store files
     //
     private class LoadAction extends AbstractAction {
-        public void actionPerformed(ActionEvent e) {
+
+		private static final long serialVersionUID = -4803138092725179325L;
+
+		public void actionPerformed(ActionEvent e) {
             int retVal = fc.showOpenDialog(PermsNavigator.this);
             if (retVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
@@ -1026,7 +1009,8 @@ public class PermsNavigator extends JFrame {
       * Starts up the application
       */
      public static void main(String[] args) {
-         PermsNavigator pm = new PermsNavigator();
+         @SuppressWarnings("unused")
+		PermsNavigator pm = new PermsNavigator();
      }
     
  }
